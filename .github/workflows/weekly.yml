@@ -14,8 +14,6 @@ jobs:
         include:
           - python-version: "3.11"
             pandas-track: "latest"
-          - python-version: "3.12"
-            pandas-track: "latest"
           - python-version: "3.13"
             pandas-track: "latest"
           - python-version: "3.14"

@@ -1,9 +1,10 @@
 SHELL := /bin/bash
 UV_CACHE_DIR ?= .uv-cache
+REF ?= main
 
 RUN := UV_CACHE_DIR=$(UV_CACHE_DIR) uv run
 
-.PHONY: sync test check format tag update-examples build-all
+.PHONY: sync test check format tag update-examples build-all weekly-run
 
 sync:
 	UV_CACHE_DIR=$(UV_CACHE_DIR) uv sync --dev
@@ -34,6 +35,9 @@ build-all:
 	mkdir -p dist
 	UV_CACHE_DIR=$(UV_CACHE_DIR) uv build --project src/narrata --out-dir dist
 	UV_CACHE_DIR=$(UV_CACHE_DIR) uv build --project src/narrata-mcp --out-dir dist
+
+weekly-run:
+	gh workflow run weekly.yml --ref $(REF)
 
 TAG_NAME := $(word 2,$(MAKECMDGOALS))
 
