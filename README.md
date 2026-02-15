@@ -9,8 +9,6 @@
   <img src="https://img.shields.io/badge/python-3.11%2B-blue.svg" alt="Python 3.11+" />
 </p>
 
-# narrata
-
 `narrata` turns price series into short text that an LLM can reason about quickly.
 
 It is designed for situations where a chart is easy for a human to read, but you need an agent to consume the same information as text.

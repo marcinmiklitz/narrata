@@ -1,0 +1,79 @@
+name: weekly
+
+on:
+  schedule:
+    - cron: "0 8 * * 1"
+  workflow_dispatch:
+
+jobs:
+  weekly-pypi-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.11"
+            pandas-track: "latest"
+          - python-version: "3.12"
+            pandas-track: "latest"
+          - python-version: "3.13"
+            pandas-track: "latest"
+          - python-version: "3.14"
+            pandas-track: "latest"
+          - python-version: "3.12"
+            pandas-track: "2"
+          - python-version: "3.12"
+            pandas-track: "3"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Recreate venv from scratch
+        run: |
+          rm -rf .venv
+          python -m venv .venv
+          .venv/bin/python -m pip install --upgrade pip
+
+      - name: Install latest released packages from PyPI
+        if: matrix.pandas-track == 'latest'
+        run: |
+          .venv/bin/python -m pip install "narrata[all]" narrata-mcp pytest
+
+      - name: Install latest released packages from PyPI (pandas 2.x)
+        if: matrix.pandas-track == '2'
+        run: |
+          .venv/bin/python -m pip install "pandas>=2,<3"
+          .venv/bin/python -m pip install "narrata[all]" narrata-mcp pytest
+
+      - name: Install latest released packages from PyPI (pandas 3.x)
+        if: matrix.pandas-track == '3'
+        run: |
+          .venv/bin/python -m pip install "pandas>=3,<4"
+          .venv/bin/python -m pip install "narrata[all]" narrata-mcp pytest
+
+      - name: Verify imports resolve to installed packages
+        run: |
+          .venv/bin/python - <<'PY'
+          import narrata
+          import narrata_mcp
+
+          narrata_path = narrata.__file__ or ""
+          mcp_path = narrata_mcp.__file__ or ""
+          print("narrata:", narrata_path)
+          print("narrata_mcp:", mcp_path)
+
+          if "site-packages" not in narrata_path:
+              raise SystemExit(f"narrata is not imported from site-packages: {narrata_path}")
+          if "site-packages" not in mcp_path:
+              raise SystemExit(f"narrata_mcp is not imported from site-packages: {mcp_path}")
+          PY
+
+      - name: Run narrata tests against installed packages
+        run: .venv/bin/pytest src/narrata/tests
+
+      - name: Run MCP tests against installed packages
+        run: .venv/bin/pytest src/narrata-mcp/tests

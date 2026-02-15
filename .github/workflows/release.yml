@@ -12,8 +12,6 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    env:
-      UV_NO_CACHE: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -90,8 +88,6 @@ jobs:
   build-narrata:
     needs: verify
     runs-on: ubuntu-latest
-    env:
-      UV_NO_CACHE: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -104,18 +100,16 @@ jobs:
       - name: Sync dependencies
         run: make sync
       - name: Build narrata distribution
-        run: uv build --project src/narrata
+        run: uv build --project src/narrata --out-dir dist
       - name: Upload narrata dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist-narrata
-          path: src/narrata/dist/*
+          path: dist/*
 
   build-mcp:
     needs: verify
     runs-on: ubuntu-latest
-    env:
-      UV_NO_CACHE: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -128,12 +122,12 @@ jobs:
       - name: Sync dependencies
         run: make sync
       - name: Build narrata-mcp distribution
-        run: uv build --project src/narrata-mcp
+        run: uv build --project src/narrata-mcp --out-dir dist
       - name: Upload narrata-mcp dist artifact
         uses: actions/upload-artifact@v4
         with:
           name: dist-narrata-mcp
-          path: src/narrata-mcp/dist/*
+          path: dist/*
 
   publish-narrata:
     needs: build-narrata

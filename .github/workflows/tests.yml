@@ -3,14 +3,10 @@ name: tests
 on:
   push:
   pull_request:
-  schedule:
-    - cron: "0 8 * * 1"
 
 jobs:
   test-matrix:
     runs-on: ubuntu-latest
-    env:
-      UV_NO_CACHE: "1"
     strategy:
       fail-fast: false
       matrix:
