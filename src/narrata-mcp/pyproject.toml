@@ -1,6 +1,6 @@
 [project]
 name = "narrata-mcp"
-version = "0.1.1"
+version = "0.1.2"
 description = "FastMCP server for narrata high-level time-series narration tools"
 authors = [{ name = "Marcin Miklitz", email = "11770857+marcinmiklitz@users.noreply.github.com" }]
 readme = "README.md"
