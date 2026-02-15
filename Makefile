@@ -45,10 +45,6 @@ ifeq (tag,$(firstword $(MAKECMDGOALS)))
 endif
 
 tag:
-	@tag="$(TAG_NAME)"; \
-	if [[ "$$tag" != v* ]]; then tag="v$$tag"; fi; \
-	version="$${tag#v}"; \
-	python scripts/check_release_versions.py "$$version"
 	@if [ "$$(git rev-parse --abbrev-ref HEAD)" != "main" ]; then \
 		echo "Tagging requires branch 'main'."; \
 		exit 1; \
@@ -59,6 +55,14 @@ tag:
 	fi
 	@tag="$(TAG_NAME)"; \
 	if [[ "$$tag" != v* ]]; then tag="v$$tag"; fi; \
+	version="$${tag#v}"; \
+	python scripts/bump_release_versions.py "$$version"; \
+	git add src/narrata/pyproject.toml src/narrata-mcp/pyproject.toml; \
+	if git diff --cached --quiet; then \
+		echo "Package versions already at $$version; no commit created."; \
+	else \
+		git commit -m "chore: release $$version"; \
+	fi; \
 	if git rev-parse "$$tag" >/dev/null 2>&1; then \
 		echo "Tag '$$tag' already exists."; \
 		exit 1; \
