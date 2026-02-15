@@ -31,9 +31,7 @@ def _load_payload() -> dict[str, object]:
     return json.loads(result.stdout.strip().splitlines()[-1])
 
 
-def _replace_between_markers(
-    path: Path, start: str, end: str, replacement_body: str
-) -> None:
+def _replace_between_markers(path: Path, start: str, end: str, replacement_body: str) -> None:
     content = path.read_text()
     if start not in content or end not in content:
         raise RuntimeError(f"Markers not found in {path}")
@@ -71,9 +69,7 @@ def _render_readme(payload: dict[str, object]) -> str:
     ]
 
     for diff in differences:
-        lines.append(
-            f"- `{diff['label']}` changed: `{diff['fallback']}` -> `{diff['extras']}`"
-        )
+        lines.append(f"- `{diff['label']}` changed: `{diff['fallback']}` -> `{diff['extras']}`")
 
     return "\n".join(lines)
 
@@ -148,12 +144,8 @@ def _render_tutorial(payload: dict[str, object]) -> str:
 
 def main() -> None:
     payload = _load_payload()
-    _replace_between_markers(
-        README_PATH, README_START, README_END, _render_readme(payload)
-    )
-    _replace_between_markers(
-        TUTORIAL_PATH, TUTORIAL_START, TUTORIAL_END, _render_tutorial(payload)
-    )
+    _replace_between_markers(README_PATH, README_START, README_END, _render_readme(payload))
+    _replace_between_markers(TUTORIAL_PATH, TUTORIAL_START, TUTORIAL_END, _render_tutorial(payload))
     print("Updated README.md and docs/tutorial.md backend comparison blocks.")
 
 

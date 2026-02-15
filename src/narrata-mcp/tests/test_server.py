@@ -16,6 +16,7 @@ ClientSession = mcp.ClientSession
 StdioServerParameters = stdio.StdioServerParameters
 stdio_client = stdio.stdio_client
 
+
 def _build_points(n: int = 120) -> list[dict[str, Any]]:
     start = datetime(2025, 1, 1)
     points: list[dict[str, Any]] = []

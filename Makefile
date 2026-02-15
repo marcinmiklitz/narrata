@@ -31,11 +31,9 @@ format:
 
 build-all:
 	rm -rf dist src/narrata/dist src/narrata-mcp/dist
-	UV_CACHE_DIR=$(UV_CACHE_DIR) uv build --project src/narrata
-	UV_CACHE_DIR=$(UV_CACHE_DIR) uv build --project src/narrata-mcp
 	mkdir -p dist
-	cp src/narrata/dist/* dist/
-	cp src/narrata-mcp/dist/* dist/
+	UV_CACHE_DIR=$(UV_CACHE_DIR) uv build --project src/narrata --out-dir dist
+	UV_CACHE_DIR=$(UV_CACHE_DIR) uv build --project src/narrata-mcp --out-dir dist
 
 TAG_NAME := $(word 2,$(MAKECMDGOALS))
 

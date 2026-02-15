@@ -33,9 +33,7 @@ def _narrate_for_mode(mode: str, sync_args: list[str]) -> dict[str, object]:
 
     python_bin = NARRATA_PROJECT / ".venv" / "bin" / "python"
     if not python_bin.exists():
-        raise RuntimeError(
-            "Expected src/narrata/.venv/bin/python after sync, but it was not found."
-        )
+        raise RuntimeError("Expected src/narrata/.venv/bin/python after sync, but it was not found.")
 
     code = textwrap.dedent(
         f"""

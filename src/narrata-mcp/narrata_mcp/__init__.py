@@ -1,2 +1,1 @@
 """narrata MCP server package."""
-

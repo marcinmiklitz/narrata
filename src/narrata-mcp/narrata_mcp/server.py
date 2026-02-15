@@ -5,8 +5,6 @@ from __future__ import annotations
 from typing import Any, Literal
 
 from fastmcp import FastMCP
-from pydantic import BaseModel, ConfigDict, Field, field_validator
-
 from narrata.exceptions import NarrataError
 from narrata.mcp_api import (
     astride_from_records,
@@ -18,6 +16,7 @@ from narrata.mcp_api import (
     sax_from_records,
     summary_from_records,
 )
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 OutputFormat = Literal["plain", "markdown_kv", "toon"]
 
