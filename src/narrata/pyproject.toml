@@ -1,6 +1,6 @@
 [project]
 name = "narrata"
-version = "0.1.1"
+version = "0.1.0"
 description = "LLM-oriented narration and compression for time series data"
 authors = [{ name = "Marcin Miklitz", email = "11770857+marcinmiklitz@users.noreply.github.com" }]
 readme = "README.md"
