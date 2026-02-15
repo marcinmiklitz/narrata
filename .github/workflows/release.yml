@@ -45,7 +45,9 @@ jobs:
           import re
           from pathlib import Path
 
-          tag = "${GITHUB_REF_NAME}"
+          import os
+
+          tag = os.environ.get("GITHUB_REF_NAME", "")
           if not tag.startswith("v"):
               raise SystemExit(f"Expected v-prefixed tag, got: {tag}")
           expected = tag[1:]
