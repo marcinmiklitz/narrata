@@ -5,6 +5,17 @@ from narrata.composition.narrate import narrate
 from narrata.exceptions import ValidationError
 
 
+def test_narrate_with_real_aapl_data(real_aapl_df: pd.DataFrame) -> None:
+    text = narrate(real_aapl_df, ticker="AAPL")
+    assert "AAPL" in text
+    assert "Date range:" in text
+    assert "Range:" in text
+    assert "Regime:" in text
+    assert "RSI(14):" in text
+    assert "SAX(16):" in text
+    assert "Support:" in text
+
+
 def test_narrate_plain_includes_summary_and_sparkline(sample_ohlcv_df: pd.DataFrame) -> None:
     text = narrate(sample_ohlcv_df)
     assert f"AAPL ({len(sample_ohlcv_df)} pts, daily):" in text

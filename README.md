@@ -6,7 +6,22 @@
   <a href="https://github.com/marcinmiklitz/narrata/actions/workflows/tests.yml">
     <img src="https://github.com/marcinmiklitz/narrata/actions/workflows/tests.yml/badge.svg?branch=main" alt="Tests" />
   </a>
+  <a href="https://pypi.org/project/narrata/">
+    <img src="https://img.shields.io/pypi/v/narrata" alt="PyPI" />
+  </a>
+  <a href="https://pypi.org/project/narrata-mcp/">
+    <img src="https://img.shields.io/pypi/v/narrata-mcp?label=narrata-mcp" alt="narrata-mcp on PyPI" />
+  </a>
+  <a href="https://pypi.org/project/narrata/">
+    <img src="https://img.shields.io/pypi/dm/narrata" alt="Downloads" />
+  </a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue.svg" alt="Python 3.11+" />
+  <a href="https://github.com/marcinmiklitz/narrata/blob/main/LICENSE">
+    <img src="https://img.shields.io/github/license/marcinmiklitz/narrata" alt="License" />
+  </a>
+  <a href="https://marcinmiklitz.github.io/narrata/">
+    <img src="https://img.shields.io/badge/docs-mkdocs-blue.svg" alt="Docs" />
+  </a>
 </p>
 
 # narrata
@@ -29,29 +44,19 @@ With optional extras for enhanced backends:
 pip install "narrata[all]"
 ```
 
-Requires Python 3.11+ and pandas 2.0+.
-
 ## Quickstart
 
 `narrate(...)` takes a pandas OHLCV DataFrame with a datetime index.
 
-In this example, `df` is assumed to be an **AAPL simulated OHLCV DataFrame** that already exists in your pipeline.
-
-Ticker is optional:
-
-- Preferred pattern: pass `ticker="AAPL"` to `narrate(...)`.
-- Optional alternative: set `df.attrs["ticker"]` once in your pipeline.
-- If omitted, narrata falls back to the analyzed column name in headers.
-
 ```python
+import yfinance as yf
 from narrata import narrate
 
-# Assume `df` already exists and contains:
-# - DatetimeIndex
-# - Open, High, Low, Close, Volume columns
-# Example source: AAPL simulated OHLCV data.
+df = yf.download("AAPL", period="1y", multi_level_index=False)
 print(narrate(df, ticker="AAPL"))
 ```
+
+Any data source works — yfinance, OpenBB, CSV, database — as long as you have a DataFrame with `Open`, `High`, `Low`, `Close`, `Volume` columns and a `DatetimeIndex`.
 
 Example output:
 
@@ -71,7 +76,35 @@ Candlestick: Doji on 2025-04-29
 Support: $145.13 (13 touches), $139.99 (6 touches)  Resistance: $175.68 (3 touches)
 ```
 
-See the [fallback/extras comparison](#fallback-vs-extras-same-input) below for full 252-point output.
+## Token compression
+
+The whole point of narrata is fitting price context into an LLM prompt without wasting tokens.
+On a 251-day AAPL OHLCV DataFrame:
+
+| Representation | Tokens (gpt-4o) |
+|---|---|
+| `df.to_string()` | ~9,000 |
+| `df.to_csv()` | ~10,700 |
+| `narrate(df)` | **~260** |
+
+That's **~35–41x compression** while preserving regime, indicators, patterns, and support/resistance.
+
+<details>
+<summary>Reproduce this comparison</summary>
+
+```python
+import tiktoken
+import pandas as pd
+from narrata import narrate
+
+enc = tiktoken.encoding_for_model("gpt-4o")
+# df = your OHLCV DataFrame
+print(f"Raw:     {len(enc.encode(df.to_string())):,} tokens")
+print(f"CSV:     {len(enc.encode(df.to_csv())):,} tokens")
+print(f"narrate: {len(enc.encode(narrate(df))):,} tokens")
+```
+
+</details>
 
 ## Fallback vs extras (same input)
 
@@ -177,8 +210,6 @@ print(digit_tokenize("Price 171.24, move +3.2%"))
 
 ## Dependencies
 
-Core dependencies include `pandas`, `numpy`, and `toons`.
-
 Optional extras:
 
 - `indicators`: `pandas-ta-openbb` (import path remains `pandas_ta`)
@@ -205,16 +236,31 @@ cp skills/narrata/SKILL.md ~/.agents/skills/narrata/SKILL.md
 
 ### FastMCP Server
 
-A dedicated MCP package is included at `src/narrata-mcp`.
-
-Install and run:
+A dedicated MCP package is available on [PyPI](https://pypi.org/project/narrata-mcp/).
+Full docs: [`src/narrata-mcp/README.md`](https://github.com/marcinmiklitz/narrata/blob/main/src/narrata-mcp/README.md).
 
 ```bash
 pip install narrata-mcp
 narrata-mcp
 ```
 
-Tool docs and setup details are in `src/narrata-mcp/README.md`.
+<details>
+<summary>Claude Desktop configuration</summary>
+
+Add to your `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "narrata": {
+      "command": "uvx",
+      "args": ["narrata-mcp"]
+    }
+  }
+}
+```
+
+</details>
 
 ## Features
 
@@ -269,10 +315,15 @@ This keeps the library lightweight, testable, and provider-agnostic.
 
 ## Citation
 
-If you use `narrata` in research, publications, or public projects, please cite it using `CITATION.cff`.
+If you use `narrata` in research, publications, or public projects:
 
-Recommended:
-
-```text
-Use the GitHub “Cite this repository” action or the metadata in CITATION.cff.
+```bibtex
+@software{miklitz_narrata,
+  author  = {Miklitz, Marcin},
+  title   = {narrata},
+  url     = {https://github.com/marcinmiklitz/narrata},
+  license = {MIT}
+}
 ```
+
+You can also use the GitHub "Cite this repository" button or the metadata in `CITATION.cff`.

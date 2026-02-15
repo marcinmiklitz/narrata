@@ -1,6 +1,17 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import pytest
+
+ASSETS_DIR = Path(__file__).parent / "assets"
+
+
+@pytest.fixture
+def real_aapl_df() -> pd.DataFrame:
+    """AAPL 1-year daily OHLCV from yfinance (static fixture)."""
+    df = pd.read_csv(ASSETS_DIR / "aapl_1y.csv", index_col="Date", parse_dates=True)
+    return df
 
 
 @pytest.fixture

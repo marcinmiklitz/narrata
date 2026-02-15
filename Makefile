@@ -4,7 +4,7 @@ REF ?= main
 
 RUN := UV_CACHE_DIR=$(UV_CACHE_DIR) uv run
 
-.PHONY: sync test check format tag update-examples build-all weekly-run
+.PHONY: sync test check format tag update-examples build-all weekly-run docs docs-build
 
 sync:
 	UV_CACHE_DIR=$(UV_CACHE_DIR) uv sync --dev
@@ -29,6 +29,12 @@ format:
 	$(RUN) ruff format --config src/narrata/pyproject.toml src/narrata/narrata src/narrata/tests scripts
 	$(RUN) ruff check --fix --config src/narrata-mcp/pyproject.toml src/narrata-mcp/narrata_mcp src/narrata-mcp/tests
 	$(RUN) ruff format --config src/narrata-mcp/pyproject.toml src/narrata-mcp/narrata_mcp src/narrata-mcp/tests
+
+docs:
+	$(RUN) mkdocs serve
+
+docs-build:
+	$(RUN) mkdocs build --strict
 
 build-all:
 	rm -rf dist src/narrata/dist src/narrata-mcp/dist

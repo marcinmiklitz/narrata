@@ -17,6 +17,7 @@ narrata-mcp = "narrata_mcp.server:main"
 
 [project.urls]
 Homepage = "https://github.com/marcinmiklitz/narrata"
+Documentation = "https://marcinmiklitz.github.io/narrata/"
 Repository = "https://github.com/marcinmiklitz/narrata"
 Issues = "https://github.com/marcinmiklitz/narrata/issues"
 

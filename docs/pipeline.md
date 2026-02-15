@@ -1,4 +1,4 @@
-# How narrata builds text
+# Pipeline
 
 Think of `narrata` as a 4-step pipeline:
 
