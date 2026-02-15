@@ -15,6 +15,11 @@ dependencies = [
 [project.scripts]
 narrata-mcp = "narrata_mcp.server:main"
 
+[project.urls]
+Homepage = "https://github.com/marcinmiklitz/narrata"
+Repository = "https://github.com/marcinmiklitz/narrata"
+Issues = "https://github.com/marcinmiklitz/narrata/issues"
+
 [dependency-groups]
 dev = [
     "mypy>=1.19.0",

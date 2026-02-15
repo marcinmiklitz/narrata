@@ -33,6 +33,11 @@ all = [
     "ruptures>=1.1.9; python_version < '3.14'",
 ]
 
+[project.urls]
+Homepage = "https://github.com/marcinmiklitz/narrata"
+Repository = "https://github.com/marcinmiklitz/narrata"
+Issues = "https://github.com/marcinmiklitz/narrata/issues"
+
 [dependency-groups]
 dev = [
     "mypy>=1.19.0",
