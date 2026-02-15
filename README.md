@@ -12,9 +12,6 @@
   <a href="https://pypi.org/project/narrata-mcp/">
     <img src="https://img.shields.io/pypi/v/narrata-mcp?label=narrata-mcp" alt="narrata-mcp on PyPI" />
   </a>
-  <a href="https://pypi.org/project/narrata/">
-    <img src="https://img.shields.io/pypi/dm/narrata" alt="Downloads" />
-  </a>
   <img src="https://img.shields.io/badge/python-3.11%2B-blue.svg" alt="Python 3.11+" />
   <a href="https://github.com/marcinmiklitz/narrata/blob/main/LICENSE">
     <img src="https://img.shields.io/github/license/marcinmiklitz/narrata" alt="License" />
