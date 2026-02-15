@@ -1,0 +1,40 @@
+import narrata
+
+
+def test_public_api_exports_expected_symbols() -> None:
+    expected = {
+        "IndicatorStats",
+        "RegimeStats",
+        "PatternStats",
+        "LevelStats",
+        "SummaryStats",
+        "ValidationError",
+        "UnsupportedFormatError",
+        "narrate",
+        "analyze_indicators",
+        "analyze_regime",
+        "analyze_summary",
+        "compute_rsi",
+        "compute_macd",
+        "describe_indicators",
+        "describe_regime",
+        "sax_encode",
+        "describe_sax",
+        "find_support_resistance",
+        "describe_support_resistance",
+        "detect_patterns",
+        "detect_chart_pattern",
+        "detect_candlestick_pattern",
+        "describe_patterns",
+        "describe_candlestick",
+        "describe_summary",
+        "make_sparkline",
+        "digit_tokenize",
+        "to_plain",
+        "to_markdown_kv",
+        "to_toon",
+        "format_sections",
+        "validate_ohlcv_frame",
+        "infer_frequency_label",
+    }
+    assert expected.issubset(set(narrata.__all__))

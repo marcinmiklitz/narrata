@@ -1,0 +1,58 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "0 8 * * 1"
+
+jobs:
+  test-matrix:
+    runs-on: ubuntu-latest
+    env:
+      UV_NO_CACHE: "1"
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.11"
+            pandas-track: "latest"
+          - python-version: "3.12"
+            pandas-track: "latest"
+          - python-version: "3.13"
+            pandas-track: "latest"
+          - python-version: "3.14"
+            pandas-track: "latest"
+          - python-version: "3.12"
+            pandas-track: "2"
+          - python-version: "3.12"
+            pandas-track: "3"
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Recreate venv from scratch
+        run: rm -rf .venv
+
+      - name: Sync workspace projects
+        run: make sync
+
+      - name: Pin pandas 2.x
+        if: matrix.pandas-track == '2'
+        run: uv pip install --python .venv/bin/python "pandas>=2,<3"
+
+      - name: Pin pandas 3.x
+        if: matrix.pandas-track == '3'
+        run: uv pip install --python .venv/bin/python "pandas>=3,<4"
+
+      - name: Run checks
+        run: make check
+      - name: Run tests
+        run: make test
+      - name: Run MCP tests explicitly
+        run: uv run pytest src/narrata-mcp/tests/test_server.py

@@ -1,0 +1,2 @@
+"""narrata MCP server package."""
+

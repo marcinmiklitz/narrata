@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+.venv/
+src/*/.venv/
+.uv-cache/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.egg-info/
+.DS_Store
+.vscode/
+
+# Custom
+PROPOSAL.md
+DEVELOPER.md
+.agents
+uv.lock
+src/*/uv.lock
