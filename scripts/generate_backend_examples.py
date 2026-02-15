@@ -7,6 +7,7 @@ import argparse
 import json
 import os
 import subprocess
+import tempfile
 import textwrap
 from pathlib import Path
 
@@ -28,51 +29,40 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
     )
 
 
-def _narrate_for_mode(mode: str, sync_args: list[str]) -> dict[str, object]:
-    _run(["uv", "sync", "--project", str(NARRATA_PROJECT), *sync_args])
+def _narrate_for_mode(mode: str, install_target: str) -> dict[str, object]:
+    fixture_path = ROOT / "src" / "narrata" / "tests" / "assets" / "msft_1y.csv"
 
-    python_bin = NARRATA_PROJECT / ".venv" / "bin" / "python"
-    if not python_bin.exists():
-        raise RuntimeError("Expected src/narrata/.venv/bin/python after sync, but it was not found.")
+    with tempfile.TemporaryDirectory(prefix=f"narrata-{mode}-") as tmp_dir:
+        venv_dir = Path(tmp_dir) / ".venv"
+        _run(["uv", "venv", str(venv_dir)])
 
-    code = textwrap.dedent(
-        f"""
-        import importlib.util
-        import json
-        import numpy as np
-        import pandas as pd
-        from narrata.composition.narrate import narrate
+        python_bin = venv_dir / "bin" / "python"
+        if not python_bin.exists():
+            raise RuntimeError(f"Expected virtualenv python at {python_bin}, but it was not found.")
 
-        mods = {{m: (importlib.util.find_spec(m) is not None) for m in ('pandas_ta', 'ruptures', 'tslearn')}}
+        _run(["uv", "pip", "install", "--python", str(python_bin), install_target])
 
-        n = 252
-        dates = pd.bdate_range('2024-01-02', periods=n)
-        rng = np.random.default_rng(17)
-        trend = np.linspace(140.0, 201.0, n)
-        seasonal = 3.0 * np.sin(np.linspace(0.0, 10.0 * np.pi, n))
-        noise = rng.normal(0.0, 0.95, n)
-        close = trend + seasonal + noise
-        open_ = close + rng.normal(0.0, 0.7, n)
-        high = np.maximum(open_, close) + np.abs(rng.normal(0.8, 0.3, n))
-        low = np.minimum(open_, close) - np.abs(rng.normal(0.8, 0.3, n))
-        volume = rng.integers(900_000, 2_300_000, n)
+        code = textwrap.dedent(
+            f"""
+            import importlib.util
+            import json
+            import pandas as pd
+            from narrata.composition.narrate import narrate
 
-        df = pd.DataFrame(
-            {{'Open': open_, 'High': high, 'Low': low, 'Close': close, 'Volume': volume}},
-            index=dates,
+            mods = {{m: (importlib.util.find_spec(m) is not None) for m in ('pandas_ta', 'ruptures', 'tslearn')}}
+
+            df = pd.read_csv({str(fixture_path)!r}, index_col='Date', parse_dates=True)
+
+            payload = {{
+                'mode': {mode!r},
+                'deps': mods,
+                'text': narrate(df, ticker='MSFT', digit_level=False),
+            }}
+            print(json.dumps(payload, ensure_ascii=False))
+            """
         )
-        df.attrs['ticker'] = 'AAPL'
-
-        payload = {{
-            'mode': {mode!r},
-            'deps': mods,
-            'text': narrate(df, digit_level=False),
-        }}
-        print(json.dumps(payload, ensure_ascii=False))
-        """
-    )
-    result = _run([str(python_bin), "-c", code])
-    return json.loads(result.stdout.strip().splitlines()[-1])
+        result = _run([str(python_bin), "-c", code])
+        return json.loads(result.stdout.strip().splitlines()[-1])
 
 
 def _diff_lines(fallback_text: str, extras_text: str) -> list[dict[str, str]]:
@@ -98,8 +88,8 @@ def _diff_lines(fallback_text: str, extras_text: str) -> list[dict[str, str]]:
 
 
 def generate() -> dict[str, object]:
-    fallback = _narrate_for_mode("fallback_only", ["--dev"])
-    extras = _narrate_for_mode("external_enabled", ["--dev", "--extra", "all"])
+    fallback = _narrate_for_mode("fallback_only", str(NARRATA_PROJECT))
+    extras = _narrate_for_mode("external_enabled", f"{NARRATA_PROJECT}[all]")
 
     return {
         "fallback": fallback,

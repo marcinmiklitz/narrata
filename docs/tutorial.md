@@ -5,22 +5,9 @@ This tutorial shows a complete flow you can copy-paste.
 ## 1. Prepare data
 
 ```python
-import numpy as np
-import pandas as pd
+import yfinance as yf
 
-n = 120
-dates = pd.date_range("2025-01-01", periods=n, freq="D")
-rng = np.random.default_rng(7)
-close = np.linspace(140.0, 175.0, n) + rng.normal(0.0, 1.0, n)
-open_ = close + rng.normal(0.0, 0.6, n)
-high = np.maximum(open_, close) + np.abs(rng.normal(0.7, 0.2, n))
-low = np.minimum(open_, close) - np.abs(rng.normal(0.7, 0.2, n))
-volume = rng.integers(900_000, 2_100_000, n)
-
-df = pd.DataFrame(
-    {"Open": open_, "High": high, "Low": low, "Close": close, "Volume": volume},
-    index=dates,
-)
+df = yf.download("AAPL", period="1y", multi_level_index=False)
 ```
 
 ## 2. Generate narration
@@ -35,19 +22,20 @@ print(text)
 Representative output:
 
 ```text
-AAPL (120 pts, daily): ▁▁▂▂▂▃▃▄▄▄▄▅▆▆▆▆▇▇██
-Date range: 2025-01-01 to 2025-04-30
-Range: [$139.99, $175.68]  Mean: $157.35  Std: $10.33
-Start: $140.00  End: $175.19  Change: +25.14%
-Regime: Uptrend since 2025-01-02 (low volatility)
-RSI(14): 65.1 (neutral-bullish)  MACD: bullish crossover 1 day ago
-BB: near upper band
-Volume: 0.98x 20-day avg (average)
-Volatility: 23rd percentile (low)
-SAX(16): aaabbccdeeffgggh
-Patterns: Ascending triangle forming since 2025-03-02
-Candlestick: Doji on 2025-04-29
-Support: $145.13 (13 touches), $139.99 (6 touches)  Resistance: $175.68 (3 touches)
+AAPL (251 pts, daily): ▅▄▃▁▂▁▁▂▂▂▄▄▆▇▇██▆▆▆
+Date range: 2025-02-14 to 2026-02-13
+Range: [$171.67, $285.92]  Mean: $235.06  Std: $28.36
+Start: $243.54  End: $255.78  Change: +5.03%
+Regime: Uptrend since 2025-05-07 (low volatility)
+RSI(14): 39.6 (neutral-bearish)  MACD: bearish crossover 0 days ago
+BB: lower half
+SMA 50/200: golden cross
+Volume: 0.94x 20-day avg (average)
+Volatility: 84th percentile (high)
+SAX(16): ecabbabbdegghhhg
+Patterns: none detected
+Candlestick: Inside Bar on 2026-02-10
+Support: $201.77 (26 touches), $208.38 (23 touches)  Resistance: $270.88 (24 touches), $257.57 (22 touches)
 ```
 
 ## 3. Use in a prompt
@@ -104,7 +92,7 @@ print(narrata.__all__)
 ## 6. Compare fallback-only vs extras-enabled output
 
 <!-- BACKEND_COMPARISON_TUTORIAL:START -->
-This comparison uses the same deterministic dataset (same random seed and same 252 business-day range).
+This comparison uses the same static real-market MSFT fixture (251 daily points from yfinance).
 
 Use separate clean virtual environments when comparing fallback vs extras.
 
@@ -123,20 +111,20 @@ Detected optional backends:
 Representative output:
 
 ```text
-AAPL (252 pts, business-daily): ▁▂▁▂▂▃▃▃▄▄▄▅▆▆▆▆▇▇▇█
-Date range: 2024-01-02 to 2024-12-18
-Range: [$140.61, $201.32]  Mean: $170.44  Std: $17.52
-Start: $141.05  End: $201.32  Change: +42.73%
-Regime: Uptrend since 2024-12-10 (low volatility)
-RSI(14): 72.9 (overbought)  MACD: bullish crossover 7 days ago
-BB: above upper band
-SMA 50/200: golden cross
-Volume: 0.95x 20-day avg (average)
-Volatility: 1st percentile (extremely low)
-SAX(16): aaabbcdeefggghhh
-Patterns: Ascending triangle forming since 2024-09-26
-Candlestick: Bullish Engulfing on 2024-12-17
-Support: $193.16 (27 touches), $156.63 (26 touches)  Resistance: $201.32 (4 touches)
+MSFT (251 pts, daily): ▂▁▁▁▃▄▅▇▇█▇███▇▆▅▆▆▂
+Date range: 2025-02-14 to 2026-02-13
+Range: [$354.56, $542.07]  Mean: $466.98  Std: $49.62
+Start: $408.43  End: $401.32  Change: -1.74%
+Regime: Downtrend since 2026-01-29 (high volatility)
+RSI(14): 32.4 (neutral-bearish)  MACD: bearish crossover 11 days ago
+BB: lower half
+SMA 50/200: death cross 17 days ago
+Volume: 0.74x 20-day avg (below average)
+Volatility: 94th percentile (extremely high)
+SAX(16): aaabdfggggggffdb
+Patterns: none detected
+Candlestick: Inside Bar on 2026-02-13
+Support: $393.67 (15 touches), $378.77 (8 touches)  Resistance: $510.83 (34 touches), $481.63 (21 touches)
 ```
 
 ### Extras-enabled environment
@@ -154,36 +142,33 @@ Detected optional backends:
 Representative output:
 
 ```text
-AAPL (252 pts, business-daily): ▁▂▁▂▂▃▃▃▄▄▄▅▆▆▆▆▇▇▇█
-Date range: 2024-01-02 to 2024-12-18
-Range: [$140.61, $201.32]  Mean: $170.44  Std: $17.52
-Start: $141.05  End: $201.32  Change: +42.73%
-Regime: Uptrend since 2024-10-02 (low volatility)
-RSI(14): 72.9 (overbought)  MACD: bullish crossover 7 days ago
-BB: above upper band
-SMA 50/200: golden cross
-Volume: 0.95x 20-day avg (average)
-Volatility: 1st percentile (extremely low)
-SAX(16): aaabbbcddefggghh
-Patterns: Ascending triangle forming since 2024-09-26
-Candlestick: Doji on 2024-12-11
-Support: $193.16 (27 touches), $156.63 (26 touches)  Resistance: $201.32 (4 touches)
+MSFT (251 pts, daily): ▂▁▁▁▃▄▅▇▇█▇███▇▆▅▆▆▂
+Date range: 2025-02-14 to 2026-02-13
+Range: [$354.56, $542.07]  Mean: $466.98  Std: $49.62
+Start: $408.43  End: $401.32  Change: -1.74%
+Regime: Ranging since 2025-02-18 (low volatility)
+RSI(14): 32.4 (neutral-bearish)  MACD: bearish crossover 11 days ago
+BB: lower half
+SMA 50/200: death cross 17 days ago
+Volume: 0.74x 20-day avg (below average)
+Volatility: 94th percentile (extremely high)
+SAX(16): aaabdefggggggfed
+Patterns: none detected
+Candlestick: Inside Bar on 2026-02-13
+Support: $393.67 (15 touches), $378.77 (8 touches)  Resistance: $510.83 (34 touches), $481.63 (21 touches)
 ```
 
 ### Why the outputs differ
 - `Regime` line changed
-  fallback: `Regime: Uptrend since 2024-12-10 (low volatility)`
-  extras: `Regime: Uptrend since 2024-10-02 (low volatility)`
+  fallback: `Regime: Downtrend since 2026-01-29 (high volatility)`
+  extras: `Regime: Ranging since 2025-02-18 (low volatility)`
 - `SAX(16)` line changed
-  fallback: `SAX(16): aaabbcdeefggghhh`
-  extras: `SAX(16): aaabbbcddefggghh`
-- `Candlestick` line changed
-  fallback: `Candlestick: Bullish Engulfing on 2024-12-17`
-  extras: `Candlestick: Doji on 2024-12-11`
+  fallback: `SAX(16): aaabdfggggggffdb`
+  extras: `SAX(16): aaabdefggggggfed`
 
 ### Why some lines stay the same
 
-- Sparkline, summary statistics, chart pattern (`Ascending triangle`), and support/resistance are deterministic in-house logic.
+- Sparkline, summary statistics, support/resistance, and many pattern labels come from deterministic in-house logic.
 - RSI/MACD values are often numerically close between in-house and `pandas_ta` for the same input series.
 <!-- BACKEND_COMPARISON_TUTORIAL:END -->
 

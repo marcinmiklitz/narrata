@@ -49,7 +49,7 @@ def _render_readme(payload: dict[str, object]) -> str:
     differences = payload["differences"]
 
     lines = [
-        "Using the same deterministic 252-point dataset:",
+        "Using the same static real-market MSFT dataset (251 daily points, yfinance fixture):",
         "",
         "Use separate clean virtual environments when comparing fallback vs extras.",
         "",
@@ -68,8 +68,11 @@ def _render_readme(payload: dict[str, object]) -> str:
         "Main differences in this run:",
     ]
 
-    for diff in differences:
-        lines.append(f"- `{diff['label']}` changed: `{diff['fallback']}` -> `{diff['extras']}`")
+    if differences:
+        for diff in differences:
+            lines.append(f"- `{diff['label']}` changed: `{diff['fallback']}` -> `{diff['extras']}`")
+    else:
+        lines.append("- No line-level differences were observed on this fixture.")
 
     return "\n".join(lines)
 
@@ -80,7 +83,7 @@ def _render_tutorial(payload: dict[str, object]) -> str:
     differences = payload["differences"]
 
     lines = [
-        "This comparison uses the same deterministic dataset (same random seed and same 252 business-day range).",
+        "This comparison uses the same static real-market MSFT fixture (251 daily points from yfinance).",
         "",
         "Use separate clean virtual environments when comparing fallback vs extras.",
         "",
@@ -123,18 +126,21 @@ def _render_tutorial(payload: dict[str, object]) -> str:
         "### Why the outputs differ",
     ]
 
-    for diff in differences:
-        lines.append(f"- `{diff['label']}` line changed")
-        lines.append(f"  fallback: `{diff['fallback']}`")
-        lines.append(f"  extras: `{diff['extras']}`")
+    if differences:
+        for diff in differences:
+            lines.append(f"- `{diff['label']}` line changed")
+            lines.append(f"  fallback: `{diff['fallback']}`")
+            lines.append(f"  extras: `{diff['extras']}`")
+    else:
+        lines.append("- No line-level differences were observed on this fixture.")
 
     lines.extend(
         [
             "",
             "### Why some lines stay the same",
             "",
-            "- Sparkline, summary statistics, chart pattern (`Ascending triangle`), "
-            "and support/resistance are deterministic in-house logic.",
+            "- Sparkline, summary statistics, support/resistance, and many pattern labels "
+            "come from deterministic in-house logic.",
             "- RSI/MACD values are often numerically close between in-house and `pandas_ta` for the same input series.",
         ]
     )
