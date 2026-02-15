@@ -18,28 +18,20 @@ Requires Python 3.11+ and pandas 2.0+.
 
 ## Quickstart
 
-```python
-import numpy as np
-import pandas as pd
+`narrate(...)` takes a pandas OHLCV DataFrame with a datetime index.
 
+In this example, `df` is an **AAPL simulated OHLCV DataFrame** that already exists in your pipeline.
+
+Ticker is optional. Preferred pattern: pass `ticker="AAPL"` directly to `narrate(...)`.
+
+```python
 from narrata import narrate
 
-n = 120
-dates = pd.date_range("2025-01-01", periods=n, freq="D")
-rng = np.random.default_rng(7)
-close = np.linspace(140.0, 175.0, n) + rng.normal(0.0, 1.0, n)
-open_ = close + rng.normal(0.0, 0.6, n)
-high = np.maximum(open_, close) + np.abs(rng.normal(0.7, 0.2, n))
-low = np.minimum(open_, close) - np.abs(rng.normal(0.7, 0.2, n))
-volume = rng.integers(900_000, 2_100_000, n)
-
-df = pd.DataFrame(
-    {"Open": open_, "High": high, "Low": low, "Close": close, "Volume": volume},
-    index=dates,
-)
-df.attrs["ticker"] = "AAPL"
-
-print(narrate(df))
+# Assume `df` already exists and contains:
+# - DatetimeIndex
+# - Open, High, Low, Close, Volume columns
+# Example source: AAPL simulated OHLCV data.
+print(narrate(df, ticker="AAPL"))
 ```
 
 Example output:
@@ -102,25 +94,34 @@ Candlestick: Doji on 2024-12-11
 Support: $193.16 (27 touches), $156.63 (26 touches)  Resistance: $201.32 (4 touches)
 ```
 
-## Public API imports
+## Digit Splitting for LLM Robustness
+
+`digit_tokenize(...)` can help when your downstream model is sensitive to dense numeric strings.
+
+Use it when you have many prices, percentages, or long decimals in prompt context.
 
 ```python
-from narrata import (
-    narrate,
-    analyze_summary,
-    analyze_regime,
-    analyze_indicators,
-    sax_encode,
-    astride_encode,
-    detect_patterns,
-    find_support_resistance,
-    make_sparkline,
-    digit_tokenize,
-    to_plain,
-    to_markdown_kv,
-    to_toon,
-)
+from narrata import digit_tokenize
+
+print(digit_tokenize("Price 171.24, move +3.2%"))
+# <digits-split>
+# Price 1 7 1 . 2 4 , move + 3 . 2 %
 ```
+
+## Features
+
+- Input validation for OHLCV DataFrames
+- Summary analysis with date range context
+- Regime classification (`Uptrend` / `Downtrend` / `Ranging`)
+- RSI and MACD interpretation
+- Bollinger Band and moving average crossover descriptions
+- Volatility and volume context
+- SAX symbolic encoding
+- ASTRIDE adaptive symbolic encoding (with `ruptures`)
+- Pattern and candlestick detection
+- Support/resistance extraction
+- Sparkline generation
+- Output formatting (`plain`, `markdown_kv`, `toon`)
 
 ## FAQ
 

@@ -42,6 +42,12 @@ def validate_ohlcv_frame(df: pd.DataFrame, required_columns: Sequence[str] = REQ
     if df.empty:
         raise ValidationError("Input DataFrame must not be empty.")
 
+    if isinstance(df.index, pd.MultiIndex):
+        raise ValidationError(
+            "MultiIndex input is not supported. For stacked multi-ticker data, "
+            "split by ticker and call narrate per symbol."
+        )
+
     if not isinstance(df.index, pd.DatetimeIndex):
         raise ValidationError("DataFrame index must be a pandas DatetimeIndex.")
 

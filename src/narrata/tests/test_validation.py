@@ -22,6 +22,16 @@ def test_validate_ohlcv_frame_rejects_non_datetime_index(sample_ohlcv_df: pd.Dat
         validate_ohlcv_frame(bad)
 
 
+def test_validate_ohlcv_frame_rejects_multiindex_panel(sample_ohlcv_df: pd.DataFrame) -> None:
+    panel = sample_ohlcv_df.copy()
+    panel.index = pd.MultiIndex.from_arrays(
+        [["AAPL"] * len(panel), panel.index],
+        names=["Ticker", "Timestamp"],
+    )
+    with pytest.raises(ValidationError, match="MultiIndex input is not supported"):
+        validate_ohlcv_frame(panel)
+
+
 def test_validate_ohlcv_frame_accepts_patchy_misaligned_values(sample_ohlcv_df: pd.DataFrame) -> None:
     patchy = sample_ohlcv_df.copy()
     patchy.loc[patchy.index[::11], "Close"] = pd.NA

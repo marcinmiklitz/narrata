@@ -21,7 +21,6 @@ df = pd.DataFrame(
     {"Open": open_, "High": high, "Low": low, "Close": close, "Volume": volume},
     index=dates,
 )
-df.attrs["ticker"] = "AAPL"
 ```
 
 ## 2. Generate narration
@@ -29,7 +28,7 @@ df.attrs["ticker"] = "AAPL"
 ```python
 from narrata import narrate
 
-text = narrate(df)
+text = narrate(df, ticker="AAPL")
 print(text)
 ```
 

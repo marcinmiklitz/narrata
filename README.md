@@ -9,6 +9,8 @@
   <img src="https://img.shields.io/badge/python-3.11%2B-blue.svg" alt="Python 3.11+" />
 </p>
 
+# narrata
+
 `narrata` turns price series into short text that an LLM can reason about quickly.
 
 It is designed for situations where a chart is easy for a human to read, but you need an agent to consume the same information as text.
@@ -31,30 +33,24 @@ Requires Python 3.11+ and pandas 2.0+.
 
 ## Quickstart
 
-Default usage is just `narrate(df)` on a standard OHLCV DataFrame:
+`narrate(...)` takes a pandas OHLCV DataFrame with a datetime index.
+
+In this example, `df` is assumed to be an **AAPL simulated OHLCV DataFrame** that already exists in your pipeline.
+
+Ticker is optional:
+
+- Preferred pattern: pass `ticker="AAPL"` to `narrate(...)`.
+- Optional alternative: set `df.attrs["ticker"]` once in your pipeline.
+- If omitted, narrata falls back to the analyzed column name in headers.
 
 ```python
-import numpy as np
-import pandas as pd
-
 from narrata import narrate
 
-n = 120
-dates = pd.date_range("2025-01-01", periods=n, freq="D")
-rng = np.random.default_rng(7)
-close = np.linspace(140.0, 175.0, n) + rng.normal(0.0, 1.0, n)
-open_ = close + rng.normal(0.0, 0.6, n)
-high = np.maximum(open_, close) + np.abs(rng.normal(0.7, 0.2, n))
-low = np.minimum(open_, close) - np.abs(rng.normal(0.7, 0.2, n))
-volume = rng.integers(900_000, 2_100_000, n)
-
-df = pd.DataFrame(
-    {"Open": open_, "High": high, "Low": low, "Close": close, "Volume": volume},
-    index=dates,
-)
-df.attrs["ticker"] = "AAPL"
-
-print(narrate(df))
+# Assume `df` already exists and contains:
+# - DatetimeIndex
+# - Open, High, Low, Close, Volume columns
+# Example source: AAPL simulated OHLCV data.
+print(narrate(df, ticker="AAPL"))
 ```
 
 Example output:
@@ -73,13 +69,6 @@ SAX(16): aaabbccdeeffgggh
 Patterns: Ascending triangle forming since 2025-03-02
 Candlestick: Doji on 2025-04-29
 Support: $145.13 (13 touches), $139.99 (6 touches)  Resistance: $175.68 (3 touches)
-```
-
-For reproducible generated examples:
-
-```bash
-python scripts/generate_backend_examples.py
-make update-examples
 ```
 
 See the [fallback/extras comparison](#fallback-vs-extras-same-input) below for full 252-point output.
@@ -150,25 +139,6 @@ print(text_block)
 print(f"Close sparkline: {spark}")
 ```
 
-## Public imports
-
-All supported public methods are re-exported from top-level `narrata`.
-
-```python
-from narrata import narrate, analyze_summary, analyze_regime, analyze_indicators
-from narrata import sax_encode, astride_encode, detect_patterns, find_support_resistance
-from narrata import make_sparkline, digit_tokenize, to_plain, to_markdown_kv, to_toon
-```
-
-You can also import from module paths (for example `narrata.analysis.indicators`) when preferred.
-
-For the complete current top-level export list:
-
-```python
-import narrata
-print(narrata.__all__)
-```
-
 ## Output formats
 
 You can keep the output plain, render as Markdown key-value, or serialize to TOON.
@@ -180,9 +150,22 @@ markdown_text = narrate(df, output_format="markdown_kv")
 plain_text = narrate(df, output_format="plain")
 ```
 
-## Token-level compression
+## Digit Splitting for LLM Robustness
 
-When you need digit-level spacing:
+`digit_tokenize(...)` is useful when your downstream model struggles with long or dense numeric strings.
+
+Why this can help:
+
+- Some tokenizers split long numbers in inconsistent chunks.
+- Smaller models can be less stable when many decimals/signs appear close together.
+- Splitting digits can reduce numeric parsing ambiguity in prompts and tool outputs.
+
+When to use it:
+
+- Use it for numeric-heavy prompts (prices, percentages, IDs, many decimals).
+- Keep it off when human readability matters more than model robustness.
+
+Example:
 
 ```python
 from narrata import digit_tokenize
@@ -203,20 +186,6 @@ Optional extras:
 - `regimes`: `ruptures` (for change-point regime detection)
 - `symbolic`: `tslearn`, `ruptures` (`ruptures` currently supports Python < 3.14)
 - `all`: install all compatible extras for your interpreter
-
-Local setup:
-
-```bash
-make sync
-```
-
-`make sync` installs both workspace projects (`src/narrata` and `src/narrata-mcp`).
-
-Build both distributable packages locally:
-
-```bash
-make build-all
-```
 
 ## Agent Integrations
 
@@ -247,7 +216,7 @@ narrata-mcp
 
 Tool docs and setup details are in `src/narrata-mcp/README.md`.
 
-## What is implemented today
+## Features
 
 - Input validation for OHLCV DataFrames
 - Summary analysis with date range context
