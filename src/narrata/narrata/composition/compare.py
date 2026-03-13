@@ -17,16 +17,16 @@ def _fmt_price(value: float, currency_symbol: str, precision: int) -> str:
     return f"{currency_symbol}{value:.{precision}f}"
 
 
-def _regime_short(df: pd.DataFrame, column: str) -> str:
+def _regime_short(df: pd.DataFrame, column: str) -> str | None:
     """Return compact regime label like 'Uptrend (low vol)'."""
     try:
         stats = analyze_regime(df, column=column)
         return f"{stats.trend_label} ({stats.volatility_label} vol)"
     except ValidationError:
-        return "insufficient data"
+        return None
 
 
-def _indicators_short(df: pd.DataFrame, column: str, frequency: str = "daily") -> dict[str, str]:
+def _indicators_short(df: pd.DataFrame, column: str, frequency: str = "daily") -> dict[str, str] | None:
     """Return compact indicator snippets."""
     try:
         stats = analyze_indicators(df, column=column, frequency=frequency)
@@ -39,7 +39,7 @@ def _indicators_short(df: pd.DataFrame, column: str, frequency: str = "daily") -
             parts["volatility"] = f"{stats.volatility_percentile:.0f}th pctl ({stats.volatility_state})"
         return parts
     except ValidationError:
-        return {"rsi": "insufficient data", "macd": "insufficient data"}
+        return None
 
 
 def _symbolic_short(
@@ -49,7 +49,7 @@ def _symbolic_short(
     word_size: int,
     alphabet_size: int,
     penalty: float,
-) -> str:
+) -> str | None:
     """Return compact symbolic label."""
     try:
         if method == "astride":
@@ -60,19 +60,18 @@ def _symbolic_short(
         stats = sax_encode(df, column=column, word_size=word_size, alphabet_size=alphabet_size)
         return describe_sax(stats)
     except ValidationError:
-        label = "ASTRIDE" if method == "astride" else f"SAX({word_size})"
-        return f"{label}: insufficient data"
+        return None
 
 
-def _levels_short(df: pd.DataFrame, column: str, currency_symbol: str, precision: int) -> tuple[str, str]:
-    """Return (support_str, resistance_str)."""
+def _levels_short(df: pd.DataFrame, column: str, currency_symbol: str, precision: int) -> tuple[str, str] | None:
+    """Return (support_str, resistance_str) or None if insufficient data."""
     try:
         levels = find_support_resistance(df, column=column)
         sup = ", ".join(_fmt_price(lv.price, currency_symbol, precision) for lv in levels.supports) or "none"
         res = ", ".join(_fmt_price(lv.price, currency_symbol, precision) for lv in levels.resistances) or "none"
         return sup, res
     except ValidationError:
-        return "insufficient data", "insufficient data"
+        return None
 
 
 def compare(
@@ -117,8 +116,8 @@ def compare(
     """
     df_before = normalize_columns(df_before)
     df_after = normalize_columns(df_after)
-    validate_ohlcv_frame(df_before)
-    validate_ohlcv_frame(df_after)
+    validate_ohlcv_frame(df_before, required_columns=("Close",))
+    validate_ohlcv_frame(df_after, required_columns=("Close",))
 
     for label, df in [("before", df_before), ("after", df_after)]:
         if column not in df.columns:
@@ -156,17 +155,19 @@ def compare(
     if include_regime:
         ra = _regime_short(df_before, column)
         rb = _regime_short(df_after, column)
-        sections["regime"] = f"Regime: {ra} \u2192 {rb}"
+        if ra is not None and rb is not None:
+            sections["regime"] = f"Regime: {ra} \u2192 {rb}"
 
     if include_indicators:
         ia = _indicators_short(df_before, column, frequency=sum_a.frequency)
         ib = _indicators_short(df_after, column, frequency=sum_b.frequency)
-        sections["rsi"] = f"RSI(14): {ia['rsi']} \u2192 {ib['rsi']}"
-        sections["macd"] = f"MACD: {ia['macd']} \u2192 {ib['macd']}"
-        if "volume" in ia and "volume" in ib:
-            sections["volume"] = f"Volume: {ia['volume']} \u2192 {ib['volume']}"
-        if "volatility" in ia and "volatility" in ib:
-            sections["volatility"] = f"Volatility: {ia['volatility']} \u2192 {ib['volatility']}"
+        if ia is not None and ib is not None:
+            sections["rsi"] = f"RSI(14): {ia['rsi']} \u2192 {ib['rsi']}"
+            sections["macd"] = f"MACD: {ia['macd']} \u2192 {ib['macd']}"
+            if "volume" in ia and "volume" in ib:
+                sections["volume"] = f"Volume: {ia['volume']} \u2192 {ib['volume']}"
+            if "volatility" in ia and "volatility" in ib:
+                sections["volatility"] = f"Volatility: {ia['volatility']} \u2192 {ib['volatility']}"
 
     if include_symbolic:
         sa = _symbolic_short(
@@ -175,12 +176,16 @@ def compare(
         sb = _symbolic_short(
             df_after, column, symbolic_method, symbolic_word_size, symbolic_alphabet_size, symbolic_penalty
         )
-        sections["symbolic"] = f"{sa} \u2192 {sb}"
+        if sa is not None and sb is not None:
+            sections["symbolic"] = f"{sa} \u2192 {sb}"
 
     if include_support_resistance:
-        sup_a, res_a = _levels_short(df_before, column, cs, p)
-        sup_b, res_b = _levels_short(df_after, column, cs, p)
-        sections["support"] = f"Support: {sup_a} \u2192 {sup_b}"
-        sections["resistance"] = f"Resistance: {res_a} \u2192 {res_b}"
+        levels_a = _levels_short(df_before, column, cs, p)
+        levels_b = _levels_short(df_after, column, cs, p)
+        if levels_a is not None and levels_b is not None:
+            sup_a, res_a = levels_a
+            sup_b, res_b = levels_b
+            sections["support"] = f"Support: {sup_a} \u2192 {sup_b}"
+            sections["resistance"] = f"Resistance: {res_a} \u2192 {res_b}"
 
     return format_sections(sections, output_format=output_format)

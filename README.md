@@ -21,9 +21,10 @@
   </a>
 </p>
 
-`narrata` turns price series into short text that an LLM can reason about quickly.
+`narrata` turns price series into short text that an LLM can reason about quickly. It has two goals:
 
-It is designed for situations where a chart is easy for a human to read, but you need an agent to consume the same information as text.
+1. **Make agents understand time series.** A raw data dump doesn't give an LLM the context it needs — regime, trend, support/resistance, indicator state. narrata extracts that structure and renders it as natural-language text an agent can act on.
+2. **Minimal token usage.** Every token in a prompt costs latency and money. narrata keeps output as compact as possible — sections that cannot be computed (short history, missing columns) are silently omitted rather than padded with placeholder text.
 
 ## Installation
 
@@ -51,9 +52,11 @@ df = yf.download("AAPL", period="1y", multi_level_index=False)
 print(narrate(df, ticker="AAPL"))
 ```
 
-Any data source works — yfinance, OpenBB, CSV, database — as long as you have a DataFrame with OHLC(V) columns and a `DatetimeIndex`.
+Any data source works — yfinance, OpenBB, CSV, database — as long as you have a DataFrame with at least a `Close` column and a `DatetimeIndex`.
 Column names are case-insensitive (`close` works as well as `Close`), `Adj Close` is automatically preferred over raw `Close` when both exist, and `Volume` is optional.
-For shorter histories, narrata keeps running and marks sections with `insufficient data` when a specific analysis needs a longer lookback.
+For shorter histories or missing columns, narrata keeps running and silently omits sections it cannot compute — no wasted tokens on placeholder text.
+
+**Close-only mode:** If your data has only Close (or Close + Volume) without Open/High/Low, narrata works — summary, regime, indicators, symbolic encoding, and support/resistance all run normally. Patterns and candlestick sections are omitted automatically.
 
 Example output:
 
@@ -150,6 +153,33 @@ Main differences in this run:
 - `Regime` changed: `Regime: Downtrend since 2026-01-29 (high volatility)` -> `Regime: Ranging since 2025-02-18 (low volatility)`
 - `SAX(16)` changed: `SAX(16): aaabdfggggggffdb` -> `SAX(16): aaabdefggggggfed`
 <!-- BACKEND_COMPARISON:END -->
+
+## Crypto data adapters
+
+Built-in adapters for common crypto data sources:
+
+```python
+from narrata import from_ccxt, from_coingecko, narrate
+
+# ccxt (Binance, Coinbase, Kraken, etc.)
+import ccxt
+exchange = ccxt.binance()
+ohlcv = exchange.fetch_ohlcv("BTC/USDT", "15m", limit=200)
+df = from_ccxt(ohlcv, ticker="BTC/USDT")
+print(narrate(df, currency_symbol="$", precision=0))
+
+# CoinGecko (close + volume only, no OHLC)
+data = cg.get_coin_market_chart_by_id(id="bitcoin", vs_currency="usd", days=90)
+df = from_coingecko(data, ticker="BTC")
+print(narrate(df, currency_symbol="$", precision=0))
+
+# yfinance works directly — no adapter needed
+import yfinance as yf
+df = yf.download("BTC-USD", period="1y", multi_level_index=False)
+print(narrate(df, ticker="BTC", precision=0))
+```
+
+CoinGecko data has no Open/High/Low, so patterns and candlestick sections are silently omitted. All other sections work normally.
 
 ## Compose your own output
 

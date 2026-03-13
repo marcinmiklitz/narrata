@@ -122,7 +122,7 @@ def test_compare_rejects_missing_column(period_pair: tuple[pd.DataFrame, pd.Data
 
 
 def test_compare_short_series_degrades_gracefully() -> None:
-    """Short data should produce 'insufficient data' markers, not crash."""
+    """Short data should silently omit sections, not crash."""
     index1 = pd.date_range("2025-01-01", periods=8, freq="D")
     close1 = pd.Series(range(8), index=index1, dtype=float) * 0.5 + 100.0
     df1 = pd.DataFrame(
@@ -140,7 +140,8 @@ def test_compare_short_series_degrades_gracefully() -> None:
     text = compare(df1, df2, ticker="SHORT")
     assert "SHORT:" in text
     assert "Price:" in text
-    assert "insufficient data" in text
+    # Insufficient-data sections are silently omitted
+    assert "Regime" not in text or "insufficient" not in text
 
 
 def test_compare_with_real_aapl_data(real_aapl_df: pd.DataFrame) -> None:

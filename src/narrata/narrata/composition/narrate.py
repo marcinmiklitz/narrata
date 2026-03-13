@@ -65,7 +65,7 @@ def narrate(
     :return: Composed narration text.
     """
     df = normalize_columns(df)
-    validate_ohlcv_frame(df)
+    validate_ohlcv_frame(df, required_columns=("Close",))
 
     if column not in df.columns:
         raise ValidationError(f"Column '{column}' does not exist in DataFrame.")
@@ -109,7 +109,7 @@ def narrate(
         try:
             sections["regime"] = describe_regime(analyze_regime(df, column=column))
         except ValidationError:
-            sections["regime"] = "Regime: insufficient data"
+            pass
 
     if include_indicators:
         try:
@@ -117,7 +117,7 @@ def narrate(
                 analyze_indicators(df, column=column, frequency=summary.frequency)
             )
         except ValidationError:
-            sections["indicators"] = "Indicators: insufficient data"
+            pass
 
     if include_symbolic:
         try:
@@ -139,8 +139,7 @@ def narrate(
                 )
                 sections["symbolic"] = describe_sax(symbolic)
         except ValidationError:
-            label = "ASTRIDE" if symbolic_method == "astride" else f"SAX({symbolic_word_size})"
-            sections["symbolic"] = f"{label}: insufficient data"
+            pass
 
     if include_patterns:
         try:
@@ -148,8 +147,7 @@ def narrate(
             sections["patterns"] = describe_patterns(pattern_stats)
             sections["candlestick"] = describe_candlestick(pattern_stats)
         except ValidationError:
-            sections["patterns"] = "Patterns: insufficient data"
-            sections["candlestick"] = "Candlestick: insufficient data"
+            pass
 
     if include_support_resistance:
         try:
@@ -158,7 +156,7 @@ def narrate(
                 levels, currency_symbol=currency_symbol, precision=precision
             )
         except ValidationError:
-            sections["levels"] = "Support: insufficient data  Resistance: insufficient data"
+            pass
 
     rendered = format_sections(sections, output_format=output_format)
     if digit_level:

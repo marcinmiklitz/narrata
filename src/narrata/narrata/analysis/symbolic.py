@@ -54,7 +54,7 @@ def sax_encode(df: pd.DataFrame, column: str = "Close", word_size: int = 16, alp
     :param alphabet_size: Number of symbols in alphabet.
     :return: Structured symbolic encoding result.
     """
-    validate_ohlcv_frame(df)
+    validate_ohlcv_frame(df, required_columns=("Close",))
     if column not in df.columns:
         raise ValidationError(f"Column '{column}' does not exist in DataFrame.")
     if word_size < 2:
@@ -151,7 +151,7 @@ def astride_encode(
     :param penalty: Ruptures PELT penalty parameter.
     :return: Structured symbolic encoding result.
     """
-    validate_ohlcv_frame(df)
+    validate_ohlcv_frame(df, required_columns=("Close",))
     if column not in df.columns:
         raise ValidationError(f"Column '{column}' does not exist in DataFrame.")
     if n_segments < 2:

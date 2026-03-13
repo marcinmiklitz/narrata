@@ -25,3 +25,14 @@ Added `compare(df_before, df_after)` for side-by-side period diff narratives.
 - **Test assets**: Added `aapl_15m_1d.csv` (26 bars) and `aapl_15m_5d.csv` (130 bars) from real yfinance data.
 - **Tests**: 21 new tests in `test_intraday.py` covering frequency detection, parameter scaling, label output, and end-to-end narration. All 148 tests pass.
 
+
+## Crypto adapters and close-only mode (2026-03-13)
+
+- Added `from_ccxt(ohlcv, ticker=...)` — converts ccxt `[[ts, O, H, L, C, V], ...]` to narrata DataFrame
+- Added `from_coingecko(data, ticker=...)` — converts CoinGecko market chart (close + volume, no OHLC) to DataFrame
+- Relaxed `narrate()`, `compare()`, and all analysis modules to accept Close-only DataFrames (previously required OHLC)
+- Patterns/candlestick sections degrade gracefully when OHLC is missing
+- Both adapters exported from top-level `narrata` namespace
+- 14 new tests in `test_adapters.py` covering both adapters, close-only mode, and integration
+- All 165 tests pass
+

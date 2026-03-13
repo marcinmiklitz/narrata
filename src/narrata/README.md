@@ -1,6 +1,9 @@
 # narrata
 
-`narrata` turns OHLCV price series into compact, deterministic text summaries optimized for LLM context.
+`narrata` turns OHLCV price series into compact, deterministic text summaries optimized for LLM context. It has two goals:
+
+1. **Make agents understand time series.** A raw data dump doesn't give an LLM the context it needs — regime, trend, support/resistance, indicator state. narrata extracts that structure and renders it as natural-language text an agent can act on.
+2. **Minimal token usage.** Every token in a prompt costs latency and money. narrata keeps output as compact as possible — sections that cannot be computed (short history, missing columns) are silently omitted rather than padded with placeholder text.
 
 ## Installation
 
@@ -29,7 +32,8 @@ print(narrate(df, ticker="AAPL"))
 ```
 
 Column names are case-insensitive (`close` works as well as `Close`), `Adj Close` is preferred over raw `Close` when both exist, and `Volume` is optional.
-For short histories, narrata keeps running and marks sections with `insufficient data` when a component needs a longer lookback.
+Close-only data works too — patterns and candlestick sections are omitted automatically, everything else runs normally.
+For short histories or missing columns, narrata keeps running and silently omits sections it cannot compute — no wasted tokens on placeholder text.
 
 Example output:
 
@@ -90,6 +94,20 @@ SAX(16): aaabdefggggggfed
 Patterns: none detected
 Candlestick: Inside Bar on 2026-02-13
 Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches), 481.63 (21 touches)
+```
+
+## Crypto data
+
+```python
+from narrata import from_ccxt, from_coingecko, narrate
+
+# ccxt (Binance, Coinbase, Kraken, etc.)
+df = from_ccxt(exchange.fetch_ohlcv("BTC/USDT", "15m"), ticker="BTC/USDT")
+
+# CoinGecko (close-only)
+df = from_coingecko(cg.get_coin_market_chart_by_id(...), ticker="BTC")
+
+# yfinance — works directly, no adapter needed
 ```
 
 ## Compare two periods

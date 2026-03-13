@@ -37,7 +37,7 @@ def analyze_regime(
     :param trend_threshold: Mean-return threshold for trend labels.
     :return: Regime classification with inferred start date.
     """
-    validate_ohlcv_frame(df)
+    validate_ohlcv_frame(df, required_columns=("Close",))
     if column not in df.columns:
         raise ValidationError(f"Column '{column}' does not exist in DataFrame.")
     if window < 5:

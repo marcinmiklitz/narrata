@@ -24,7 +24,7 @@ def analyze_summary(
         When ``None``, frequency is auto-detected from the index.
     :return: Structured summary statistics.
     """
-    validate_ohlcv_frame(df)
+    validate_ohlcv_frame(df, required_columns=("Close",))
 
     if frequency is not None and frequency not in VALID_FREQUENCIES:
         raise ValidationError(f"Unknown frequency '{frequency}'. Valid values: {', '.join(sorted(VALID_FREQUENCIES))}.")

@@ -95,6 +95,29 @@ from narrata import (
 
 If you prefer module-scoped imports, use `narrata.analysis.*`, `narrata.rendering.*`, and `narrata.formatting.*`.
 
+## 7. Crypto data
+
+narrata includes adapters for common crypto data sources:
+
+```python
+from narrata import from_ccxt, from_coingecko, narrate
+
+# ccxt — converts [[timestamp_ms, O, H, L, C, V], ...] to DataFrame
+import ccxt
+exchange = ccxt.binance()
+ohlcv = exchange.fetch_ohlcv("BTC/USDT", "15m", limit=200)
+df = from_ccxt(ohlcv, ticker="BTC/USDT")
+print(narrate(df, currency_symbol="$", precision=0))
+
+# CoinGecko — close + volume only (no Open/High/Low)
+df = from_coingecko(cg_data, ticker="BTC")
+print(narrate(df, currency_symbol="$", precision=0))
+```
+
+CoinGecko returns only close prices, so patterns and candlestick sections are silently omitted. All other sections (summary, regime, indicators, symbolic, support/resistance) work normally.
+
+**Close-only mode** also works for any other data source that only provides closing prices — just pass a DataFrame with a `Close` column and a `DatetimeIndex`.
+
 For the full public export list at your installed version:
 
 ```python
@@ -250,4 +273,4 @@ Use `digit_level=True` only when you are explicitly optimizing number tokenizati
 
 ### Short-history behavior
 
-If a section needs more lookback than your dataset provides, `narrate(...)` does not fail the whole output. Instead, it keeps the rest of the narration and marks that section as `insufficient data`.
+If a section needs more lookback than your dataset provides, `narrate(...)` does not fail the whole output. Instead, it keeps the rest of the narration and silently omits that section.

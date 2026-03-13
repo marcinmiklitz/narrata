@@ -35,6 +35,14 @@ Avoid internal/private helpers unless explicitly requested.
 
 narrata auto-detects sub-daily frequencies (`1min`, `5min`, `15min`, `30min`, `hourly`) and scales indicator defaults (SMA crossover, volume lookback, volatility lookback) to match daily-equivalent horizons. For patchy or unevenly-spaced data, pass the frequency explicitly: `narrate(df, frequency="15min")`, `--frequency 15min` (CLI), or the `frequency` field in MCP tools. Output labels adapt automatically (`"SMA 10/40"`, `"26-bar avg"`, `"bars ago"`).
 
+## Crypto data adapters
+
+- `from_ccxt(ohlcv, ticker=...)` — converts ccxt's `[[ts, O, H, L, C, V], ...]` to narrata DataFrame
+- `from_coingecko(data, ticker=...)` — converts CoinGecko market chart response (close-only) to DataFrame
+- yfinance crypto tickers (e.g. `BTC-USD`) work directly with `narrate()`, no adapter needed
+
+Close-only data (CoinGecko, or any DataFrame with just a `Close` column) works — patterns/candlestick sections are silently omitted, everything else runs normally.
+
 ## Data handling guidance
 
 - Patchy/misaligned numeric values are valid; do not reject them by default.

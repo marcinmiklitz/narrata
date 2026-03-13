@@ -95,6 +95,22 @@ indicators = analyze_indicators(df_15m, frequency="15min")
 text = narrate(df, frequency="irregular")  # uses "bar" units
 ```
 
+## Crypto and close-only data
+
+narrata accepts DataFrames with only a `Close` column (or Close + Volume). Adapters are provided for common crypto sources:
+
+```python
+from narrata import from_ccxt, from_coingecko, narrate
+
+# ccxt: [[timestamp_ms, O, H, L, C, V], ...]
+df = from_ccxt(exchange.fetch_ohlcv("BTC/USDT", "15m"), ticker="BTC/USDT")
+
+# CoinGecko: {"prices": [...], "total_volumes": [...]}
+df = from_coingecko(cg_data, ticker="BTC")
+
+print(narrate(df))
+```
+
 ## Practical guidance
 
 - Use `narrate(...)` for default usage in agents and apps.

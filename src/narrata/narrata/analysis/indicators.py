@@ -277,7 +277,7 @@ def analyze_indicators(
     :param frequency: Frequency label (e.g. ``"daily"``, ``"15min"``).
     :return: Structured indicator statistics.
     """
-    validate_ohlcv_frame(df)
+    validate_ohlcv_frame(df, required_columns=("Close",))
     if column not in df.columns:
         raise ValidationError(f"Column '{column}' does not exist in DataFrame.")
 

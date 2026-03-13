@@ -146,10 +146,11 @@ def test_narrate_short_series_reports_insufficient_data_in_sensitive_sections() 
 
     text = narrate(frame, ticker="AAPL")
     assert "Date range:" in text
-    assert "Regime: insufficient data" in text
-    assert "Indicators: insufficient data" in text
-    assert "SAX(16): insufficient data" in text
-    assert "Support: insufficient data  Resistance: insufficient data" in text
+    # Insufficient-data sections are silently omitted
+    assert "Regime" not in text
+    assert "RSI" not in text
+    assert "SAX" not in text
+    assert "Support" not in text
 
 
 def test_narrate_one_month_series_does_not_raise_and_marks_indicators_insufficient() -> None:
@@ -168,7 +169,8 @@ def test_narrate_one_month_series_does_not_raise_and_marks_indicators_insufficie
 
     text = narrate(frame, ticker="AAPL")
     assert "AAPL (22 pts, business-daily):" in text
-    assert "Indicators: insufficient data" in text
+    # Indicators section silently omitted for short series
+    assert "RSI" not in text
 
 
 def test_narrate_json_output(sample_ohlcv_df: pd.DataFrame) -> None:

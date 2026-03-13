@@ -2,6 +2,7 @@
 
 from importlib.metadata import version
 
+from narrata.adapters import from_ccxt, from_coingecko
 from narrata.analysis.indicators import (
     analyze_indicators,
     compute_bollinger,
@@ -81,6 +82,8 @@ __all__ = [
     "digit_tokenize",
     "format_sections",
     "find_support_resistance",
+    "from_ccxt",
+    "from_coingecko",
     "infer_frequency_label",
     "make_sparkline",
     "narrate",

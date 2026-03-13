@@ -25,7 +25,7 @@ def find_support_resistance(
     :param extrema_order: Neighborhood size used by ``argrelextrema``.
     :return: Structured support and resistance levels.
     """
-    validate_ohlcv_frame(df)
+    validate_ohlcv_frame(df, required_columns=("Close",))
     if column not in df.columns:
         raise ValidationError(f"Column '{column}' does not exist in DataFrame.")
     if tolerance_ratio <= 0.0:
