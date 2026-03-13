@@ -15,6 +15,7 @@ narrata-mcp = { workspace = true }
 [dependency-groups]
 dev = [
     "mypy>=1.19.0",
+    "pyarrow>=18.0.0",
     "pytest>=9.0.0",
     "pytest-cov>=7.0.0",
     "ruff>=0.14.0",
