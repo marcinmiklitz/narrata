@@ -111,6 +111,35 @@ df = from_coingecko(cg_data, ticker="BTC")
 print(narrate(df))
 ```
 
+## Silent section skipping
+
+By default, narrata silently omits sections that cannot be computed (short history, missing columns) or have no useful information ("none detected"). This keeps output minimal. To show all sections including empty ones:
+
+```python
+text = narrate(df, verbose=True)
+```
+
+```bash
+narrata prices.csv --verbose
+```
+
+## Digit-level tokenization
+
+`digit_tokenize(...)` splits dense numeric strings into individual digits, which can improve downstream LLM accuracy on price-heavy prompts:
+
+```python
+from narrata import digit_tokenize
+
+print(digit_tokenize("Price 171.24"))
+# Price 1 7 1 . 2 4
+```
+
+Or enable it directly in `narrate()`:
+
+```python
+text = narrate(df, digit_level=True)
+```
+
 ## Practical guidance
 
 - Use `narrate(...)` for default usage in agents and apps.

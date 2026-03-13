@@ -33,7 +33,6 @@ SMA 50/200: golden cross
 Volume: 0.94x 20-day avg (average)
 Volatility: 84th percentile (high)
 SAX(16): ecabbabbdegghhhg
-Patterns: none detected
 Candlestick: Inside Bar on 2026-02-10
 Support: 201.77 (26 touches), 208.38 (23 touches)  Resistance: 270.88 (24 touches), 257.57 (22 touches)
 ```
@@ -63,11 +62,17 @@ print(compare(df_h1, df_h2, ticker="AAPL"))
 
 This produces a compact `→` diff narrative showing how price, regime, indicators, and levels changed between the two windows. Useful for prompt context like "how did AAPL change between H1 and H2?"
 
-## 5. Optional: markdown key-value output
+## 5. Output formats
 
 ```python
-markdown_text = narrate(df, output_format="markdown_kv")
-print(markdown_text)
+# Markdown key-value (scannable sections)
+print(narrate(df, output_format="markdown_kv"))
+
+# Toon (compact structured serialization)
+print(narrate(df, output_format="toon"))
+
+# JSON (structured consumption)
+print(narrate(df, output_format="json"))
 ```
 
 ## 6. Public imports
@@ -90,6 +95,7 @@ from narrata import (
     to_plain,
     to_markdown_kv,
     to_toon,
+    to_json,
 )
 ```
 
@@ -125,7 +131,7 @@ import narrata
 print(narrata.__all__)
 ```
 
-## 7. Compare fallback-only vs extras-enabled output
+## 8. Compare fallback-only vs extras-enabled output
 
 <!-- BACKEND_COMPARISON_TUTORIAL:START -->
 This comparison uses the same static real-market MSFT fixture (251 daily points from yfinance).
@@ -158,7 +164,6 @@ SMA 50/200: death cross 17 days ago
 Volume: 0.74x 20-day avg (below average)
 Volatility: 94th percentile (extremely high)
 SAX(16): aaabdfggggggffdb
-Patterns: none detected
 Candlestick: Inside Bar on 2026-02-13
 Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches), 481.63 (21 touches)
 ```
@@ -189,7 +194,6 @@ SMA 50/200: death cross 17 days ago
 Volume: 0.74x 20-day avg (below average)
 Volatility: 94th percentile (extremely high)
 SAX(16): aaabdefggggggfed
-Patterns: none detected
 Candlestick: Inside Bar on 2026-02-13
 Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches), 481.63 (21 touches)
 ```
@@ -208,7 +212,7 @@ Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches
 - RSI/MACD values are often numerically close between in-house and `pandas_ta` for the same input series.
 <!-- BACKEND_COMPARISON_TUTORIAL:END -->
 
-## 8. Intraday data
+## 9. Intraday data
 
 narrata auto-detects sub-daily frequencies and scales indicator defaults. No special flags needed for clean data; for patchy or unevenly-spaced data, pass `frequency` explicitly:
 
@@ -254,7 +258,7 @@ Key differences from daily output:
 | Volume lookback | 20 days | 26 bars | 78 bars |
 | Volatility lookback | 252 bars | 520 bars | 1560 bars |
 
-## 9. Practical notes
+## 10. Practical notes
 
 ### Choosing output format
 
@@ -271,6 +275,16 @@ Key differences from daily output:
 
 Use `digit_level=True` only when you are explicitly optimizing number tokenization behavior in your LLM pipeline. For general usage, leave it off for readability.
 
-### Short-history behavior
+### Silent section skipping
 
-If a section needs more lookback than your dataset provides, `narrate(...)` does not fail the whole output. Instead, it keeps the rest of the narration and silently omits that section.
+By default, narrata silently omits sections that have no useful information — both insufficient-data sections (short history, missing columns) and empty results like "Patterns: none detected". This keeps output minimal and avoids wasting tokens on placeholder text.
+
+To see all sections including empty ones, use `verbose=True` (Python) or `--verbose` (CLI):
+
+```python
+text = narrate(df, verbose=True)
+```
+
+```bash
+narrata prices.csv --verbose
+```

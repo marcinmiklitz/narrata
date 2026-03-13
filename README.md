@@ -72,7 +72,6 @@ SMA 50/200: golden cross
 Volume: 0.94x 20-day avg (average)
 Volatility: 84th percentile (high)
 SAX(16): ecabbabbdegghhhg
-Patterns: none detected
 Candlestick: Inside Bar on 2026-02-10
 Support: 201.77 (26 touches), 208.38 (23 touches)  Resistance: 270.88 (24 touches), 257.57 (22 touches)
 ```
@@ -125,7 +124,6 @@ SMA 50/200: death cross 17 days ago
 Volume: 0.74x 20-day avg (below average)
 Volatility: 94th percentile (extremely high)
 SAX(16): aaabdfggggggffdb
-Patterns: none detected
 Candlestick: Inside Bar on 2026-02-13
 Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches), 481.63 (21 touches)
 ```
@@ -144,7 +142,6 @@ SMA 50/200: death cross 17 days ago
 Volume: 0.74x 20-day avg (below average)
 Volatility: 94th percentile (extremely high)
 SAX(16): aaabdefggggggfed
-Patterns: none detected
 Candlestick: Inside Bar on 2026-02-13
 Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches), 481.63 (21 touches)
 ```

@@ -182,6 +182,12 @@ def test_narrate_json_output(sample_ohlcv_df: pd.DataFrame) -> None:
     assert "AAPL" in data["overview"]
 
 
+def test_narrate_toon_output(sample_ohlcv_df: pd.DataFrame) -> None:
+    text = narrate(sample_ohlcv_df, ticker="AAPL", output_format="toon")
+    assert "overview" in text
+    assert "AAPL" in text
+
+
 def test_narrate_precision_zero(sample_ohlcv_df: pd.DataFrame) -> None:
     text = narrate(sample_ohlcv_df, ticker="AAPL", precision=0)
     assert "Range: [" in text

@@ -28,6 +28,9 @@ Use this skill for OHLCV-to-text workflows.
 - `astride_encode`, `describe_astride`
 - `detect_patterns`, `describe_patterns`, `describe_candlestick`
 - `find_support_resistance`, `describe_support_resistance`
+- `digit_tokenize`
+- `from_ccxt`, `from_coingecko`
+- `to_plain`, `to_markdown_kv`, `to_toon`, `to_json`
 
 Avoid internal/private helpers unless explicitly requested.
 
@@ -42,6 +45,10 @@ narrata auto-detects sub-daily frequencies (`1min`, `5min`, `15min`, `30min`, `h
 - yfinance crypto tickers (e.g. `BTC-USD`) work directly with `narrate()`, no adapter needed
 
 Close-only data (CoinGecko, or any DataFrame with just a `Close` column) works — patterns/candlestick sections are silently omitted, everything else runs normally.
+
+## Silent section skipping
+
+By default, narrata silently omits sections with insufficient data or empty results (e.g. "none detected"). This minimizes token usage. Use `verbose=True` / `--verbose` to show all sections.
 
 ## Data handling guidance
 
@@ -76,13 +83,17 @@ narrata data.csv --precision 0
 narrata data.csv --symbolic-method astride
 
 # Disable specific sections
-narrata data.csv --no-patterns --no-support-resistance
+narrata data.csv --no-summary --no-sparkline --no-regime
+narrata data.csv --no-indicators --no-symbolic --no-patterns --no-support-resistance
+
+# Show all sections including empty ones
+narrata data.csv --verbose
 
 # Compare two periods
 narrata compare q1.csv q2.csv --ticker AAPL
 ```
 
-The input must have a datetime index column and OHLC columns (Volume optional, column names case-insensitive). All `narrate()` parameters are exposed as flags — run `narrata --help` for the full list.
+The input must have a datetime index column and at least a `Close` column (Volume optional, column names case-insensitive). All `narrate()` parameters are exposed as flags — run `narrata --help` for the full list.
 
 Install: `uv tool install narrata[all]` or `pip install narrata[all]`.
 

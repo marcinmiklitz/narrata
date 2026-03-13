@@ -43,6 +43,7 @@ Add to your `claude_desktop_config.json`:
 | Tool | Description |
 |---|---|
 | `narrata_narrate_ohlcv` | Full narration text (default entry point) |
+| `narrata_compare_ohlcv` | Side-by-side diff of two periods |
 | `narrata_summary_ohlcv` | Summary stats and text |
 | `narrata_regime_ohlcv` | Regime classification (trend + volatility) |
 | `narrata_indicators_ohlcv` | RSI, MACD, Bollinger, volume, volatility |

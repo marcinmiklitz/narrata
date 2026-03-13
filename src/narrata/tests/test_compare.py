@@ -77,6 +77,13 @@ def test_compare_markdown_kv_output(period_pair: tuple[pd.DataFrame, pd.DataFram
     assert "**price**:" in text
 
 
+def test_compare_toon_output(period_pair: tuple[pd.DataFrame, pd.DataFrame]) -> None:
+    df1, df2 = period_pair
+    text = compare(df1, df2, ticker="AAPL", output_format="toon")
+    assert "overview" in text
+    assert "price" in text
+
+
 def test_compare_disable_sections(period_pair: tuple[pd.DataFrame, pd.DataFrame]) -> None:
     df1, df2 = period_pair
     text = compare(
