@@ -7,7 +7,7 @@ from narrata.analysis.patterns import describe_candlestick, describe_patterns, d
 from narrata.analysis.regimes import analyze_regime, describe_regime
 from narrata.analysis.summary import analyze_summary, describe_summary
 from narrata.analysis.support_resistance import describe_support_resistance, find_support_resistance
-from narrata.analysis.symbolic import describe_sax, sax_encode
+from narrata.analysis.symbolic import astride_encode, describe_astride, describe_sax, sax_encode
 from narrata.compression.digits import digit_tokenize
 from narrata.exceptions import ValidationError
 from narrata.formatting.serializers import format_sections
@@ -29,8 +29,10 @@ def narrate(
     include_patterns: bool = True,
     include_support_resistance: bool = True,
     sparkline_width: int = 20,
+    symbolic_method: str = "sax",
     symbolic_word_size: int = 16,
     symbolic_alphabet_size: int = 8,
+    symbolic_penalty: float = 3.0,
     digit_level: bool = False,
     currency_symbol: str = "",
     precision: int = 2,
@@ -49,8 +51,10 @@ def narrate(
     :param include_patterns: Include chart and candlestick pattern lines.
     :param include_support_resistance: Include support/resistance line.
     :param sparkline_width: Sparkline width.
-    :param symbolic_word_size: SAX word size.
-    :param symbolic_alphabet_size: SAX alphabet size.
+    :param symbolic_method: Symbolic encoding method ('sax' or 'astride').
+    :param symbolic_word_size: SAX word size / ASTRIDE n_segments.
+    :param symbolic_alphabet_size: Symbol alphabet size.
+    :param symbolic_penalty: ASTRIDE ruptures penalty (ignored for SAX).
     :param digit_level: Apply digit-level tokenization to final text.
     :param currency_symbol: Symbol prepended to price values (default: none).
     :param precision: Decimal places for price values (default: 2).
@@ -110,15 +114,26 @@ def narrate(
 
     if include_symbolic:
         try:
-            symbolic = sax_encode(
-                df,
-                column=column,
-                word_size=symbolic_word_size,
-                alphabet_size=symbolic_alphabet_size,
-            )
-            sections["symbolic"] = describe_sax(symbolic)
+            if symbolic_method == "astride":
+                symbolic = astride_encode(
+                    df,
+                    column=column,
+                    n_segments=symbolic_word_size,
+                    alphabet_size=symbolic_alphabet_size,
+                    penalty=symbolic_penalty,
+                )
+                sections["symbolic"] = describe_astride(symbolic)
+            else:
+                symbolic = sax_encode(
+                    df,
+                    column=column,
+                    word_size=symbolic_word_size,
+                    alphabet_size=symbolic_alphabet_size,
+                )
+                sections["symbolic"] = describe_sax(symbolic)
         except ValidationError:
-            sections["symbolic"] = f"SAX({symbolic_word_size}): insufficient data"
+            label = "ASTRIDE" if symbolic_method == "astride" else f"SAX({symbolic_word_size})"
+            sections["symbolic"] = f"{label}: insufficient data"
 
     if include_patterns:
         try:

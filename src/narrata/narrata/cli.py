@@ -42,8 +42,15 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument("--precision", type=int, default=2, help="Decimal places for price values (default: 2).")
     p.add_argument("--digit-level", action="store_true", help="Apply digit-level tokenization.")
     p.add_argument("--sparkline-width", type=int, default=20, help="Sparkline width (default: 20).")
-    p.add_argument("--sax-word-size", type=int, default=16, help="SAX word size (default: 16).")
-    p.add_argument("--sax-alphabet-size", type=int, default=8, help="SAX alphabet size (default: 8).")
+    p.add_argument(
+        "--symbolic-method",
+        choices=["sax", "astride"],
+        default="sax",
+        help="Symbolic encoding method (default: sax).",
+    )
+    p.add_argument("--symbolic-word-size", type=int, default=16, help="SAX word size / ASTRIDE segments (default: 16).")
+    p.add_argument("--symbolic-alphabet-size", type=int, default=8, help="Symbol alphabet size (default: 8).")
+    p.add_argument("--symbolic-penalty", type=float, default=3.0, help="ASTRIDE ruptures penalty (default: 3.0).")
 
     # Section toggles — all on by default; --no-X disables.
     for section in ("summary", "sparkline", "regime", "indicators", "symbolic", "patterns", "support-resistance"):
@@ -106,8 +113,10 @@ def main(argv: list[str] | None = None) -> None:
         include_patterns=not args.no_patterns,
         include_support_resistance=not args.no_support_resistance,
         sparkline_width=args.sparkline_width,
-        symbolic_word_size=args.sax_word_size,
-        symbolic_alphabet_size=args.sax_alphabet_size,
+        symbolic_method=args.symbolic_method,
+        symbolic_word_size=args.symbolic_word_size,
+        symbolic_alphabet_size=args.symbolic_alphabet_size,
+        symbolic_penalty=args.symbolic_penalty,
         digit_level=args.digit_level,
         currency_symbol=args.currency,
         precision=args.precision,

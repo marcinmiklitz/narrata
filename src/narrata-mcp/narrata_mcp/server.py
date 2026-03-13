@@ -74,8 +74,10 @@ class NarrateInput(OhlcvPayload):
     include_patterns: bool = Field(default=True)
     include_support_resistance: bool = Field(default=True)
     sparkline_width: int = Field(default=20, ge=4, le=80)
+    symbolic_method: Literal["sax", "astride"] = Field(default="sax", description="Symbolic encoding method.")
     symbolic_word_size: int = Field(default=16, ge=2, le=64)
     symbolic_alphabet_size: int = Field(default=8, ge=2, le=26)
+    symbolic_penalty: float = Field(default=3.0, gt=0.0, le=100.0, description="ASTRIDE ruptures penalty.")
     digit_level: bool = Field(default=False)
     currency_symbol: str = Field(default="", description="Symbol prepended to price values (e.g. '$', '£').")
     precision: int = Field(default=2, ge=0, le=10, description="Decimal places for price values.")
@@ -166,8 +168,10 @@ def narrata_narrate_ohlcv(params: NarrateInput) -> dict[str, Any]:
                 include_patterns=params.include_patterns,
                 include_support_resistance=params.include_support_resistance,
                 sparkline_width=params.sparkline_width,
+                symbolic_method=params.symbolic_method,
                 symbolic_word_size=params.symbolic_word_size,
                 symbolic_alphabet_size=params.symbolic_alphabet_size,
+                symbolic_penalty=params.symbolic_penalty,
                 digit_level=params.digit_level,
                 currency_symbol=params.currency_symbol,
                 precision=params.precision,
