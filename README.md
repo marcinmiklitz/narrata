@@ -21,9 +21,11 @@
   </a>
 </p>
 
-`narrata` turns price series into short text that an LLM can reason about quickly.
-
-It is designed for situations where a chart is easy for a human to read, but you need an agent to consume the same information as text.
+<p align="center">
+<code>narrata</code> turns price series into short text that an LLM can reason about quickly.
+<br><br>
+It is designed for situations where a chart is easy for a human to read,<br>but you need an agent to consume the same information as text.
+</p>
 
 <p align="center">
   <img src="./assets/demo.gif" alt="narrata CLI demo" width="720" />
