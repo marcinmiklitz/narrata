@@ -2,39 +2,24 @@ import narrata
 
 
 def test_public_api_exports_expected_symbols() -> None:
-    expected = {
-        "IndicatorStats",
-        "RegimeStats",
-        "PatternStats",
-        "LevelStats",
-        "SummaryStats",
-        "ValidationError",
-        "UnsupportedFormatError",
+    # Every symbol in __all__ must be actually importable from the package
+    for sym in narrata.__all__:
+        assert hasattr(narrata, sym), f"{sym!r} listed in __all__ but not importable"
+    # Key symbols that must always be present
+    for sym in (
         "narrate",
-        "analyze_indicators",
-        "analyze_regime",
-        "analyze_summary",
-        "compute_rsi",
-        "compute_macd",
-        "describe_indicators",
-        "describe_regime",
-        "sax_encode",
-        "describe_sax",
-        "find_support_resistance",
-        "describe_support_resistance",
-        "detect_patterns",
-        "detect_chart_pattern",
-        "detect_candlestick_pattern",
-        "describe_patterns",
-        "describe_candlestick",
-        "describe_summary",
-        "make_sparkline",
-        "digit_tokenize",
+        "compare",
+        "to_json",
         "to_plain",
         "to_markdown_kv",
         "to_toon",
         "format_sections",
+        "from_ccxt",
+        "from_coingecko",
+        "normalize_columns",
         "validate_ohlcv_frame",
         "infer_frequency_label",
-    }
-    assert expected.issubset(set(narrata.__all__))
+        "digit_tokenize",
+        "make_sparkline",
+    ):
+        assert sym in narrata.__all__, f"{sym!r} missing from __all__"

@@ -205,3 +205,28 @@ def test_narrate_astride_method(sample_ohlcv_df: pd.DataFrame) -> None:
     text = narrate(sample_ohlcv_df, symbolic_method="astride")
     assert "ASTRIDE(" in text
     assert "SAX(" not in text
+
+
+def test_narrate_verbose_shows_insufficient_sections() -> None:
+    """With verbose=True, short series should show 'insufficient data' labels."""
+    index = pd.date_range("2025-01-01", periods=8, freq="D")
+    close = pd.Series(range(8), index=index, dtype=float) * 0.5 + 100.0
+    frame = pd.DataFrame(
+        {
+            "Open": close - 0.2,
+            "High": close + 0.4,
+            "Low": close - 0.5,
+            "Close": close,
+            "Volume": 1_000,
+        },
+        index=index,
+    )
+    text = narrate(frame, ticker="AAPL", verbose=True)
+    assert "insufficient data" in text.lower()
+
+
+def test_narrate_without_sparkline(sample_ohlcv_df: pd.DataFrame) -> None:
+    text = narrate(sample_ohlcv_df, include_sparkline=False)
+    # Overview should not contain sparkline chars
+    overview_line = text.splitlines()[0]
+    assert "▁" not in overview_line

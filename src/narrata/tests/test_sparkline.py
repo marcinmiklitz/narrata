@@ -34,3 +34,21 @@ def test_make_sparkline_returns_empty_for_empty_input() -> None:
 def test_make_sparkline_rejects_invalid_bars() -> None:
     with pytest.raises(ValueError, match="at least two"):
         make_sparkline([1, 2, 3], bars="x")
+
+
+def test_downsample_rejects_zero_width() -> None:
+    with pytest.raises(ValueError, match="width must be >= 1"):
+        downsample_evenly([1.0, 2.0], width=0)
+
+
+def test_downsample_empty_input() -> None:
+    assert downsample_evenly([], width=5) == []
+
+
+def test_normalize_to_bins_empty_input() -> None:
+    assert normalize_to_bins([], bins=8) == []
+
+
+def test_normalize_to_bins_rejects_non_finite() -> None:
+    with pytest.raises(ValueError, match="finite numbers"):
+        normalize_to_bins([1.0, float("inf")], bins=8)

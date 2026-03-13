@@ -2,7 +2,17 @@ import pandas as pd
 import pytest
 
 import narrata.analysis.indicators as indicators
-from narrata.analysis.indicators import analyze_indicators, compute_macd, compute_rsi, describe_indicators
+from narrata.analysis.indicators import (
+    analyze_indicators,
+    compute_bollinger,
+    compute_ma_crossover,
+    compute_macd,
+    compute_rsi,
+    compute_volatility_percentile,
+    compute_volume_state,
+    describe_indicators,
+)
+from narrata.exceptions import ValidationError
 
 
 def test_compute_rsi_returns_bounded_value(sample_ohlcv_df: pd.DataFrame) -> None:
@@ -136,3 +146,77 @@ def test_analyze_indicators_uses_pandas_ta_macd_lines_for_state(monkeypatch, sam
 )
 def test_format_ordinal(value: float, expected: str) -> None:
     assert indicators._format_ordinal(value) == expected
+
+
+def test_compute_rsi_rejects_small_period() -> None:
+    with pytest.raises(ValidationError, match="period must be >= 2"):
+        compute_rsi(pd.Series([1.0, 2.0, 3.0]), period=1)
+
+
+def test_compute_rsi_rejects_insufficient_data() -> None:
+    with pytest.raises(ValidationError, match="Not enough data"):
+        compute_rsi(pd.Series([1.0, 2.0, 3.0]), period=14)
+
+
+def test_compute_rsi_fully_rising() -> None:
+    series = pd.Series([float(i) for i in range(50)])
+    value = compute_rsi(series)
+    assert value == pytest.approx(100.0)
+
+
+def test_compute_macd_rejects_bad_periods() -> None:
+    with pytest.raises(ValidationError, match="fast_period must be smaller"):
+        compute_macd(pd.Series([1.0] * 100), fast_period=26, slow_period=12)
+
+
+def test_compute_macd_rejects_insufficient_data() -> None:
+    with pytest.raises(ValidationError, match="Not enough data"):
+        compute_macd(pd.Series([1.0] * 10))
+
+
+def test_compute_bollinger_rejects_insufficient_data() -> None:
+    with pytest.raises(ValidationError, match="Not enough data"):
+        compute_bollinger(pd.Series([1.0] * 5), period=20)
+
+
+def test_compute_bollinger_flat_series() -> None:
+    series = pd.Series([100.0] * 30)
+    position, squeeze = compute_bollinger(series)
+    assert position == "at midline"
+
+
+def test_compute_ma_crossover_insufficient_data() -> None:
+    cross, days = compute_ma_crossover(pd.Series([1.0] * 50))
+    assert cross is None
+    assert days is None
+
+
+def test_compute_volume_state_missing_column() -> None:
+    df = pd.DataFrame({"Close": [1.0] * 30}, index=pd.date_range("2025-01-01", periods=30))
+    with pytest.raises(ValidationError, match="Volume column"):
+        compute_volume_state(df)
+
+
+def test_compute_volume_state_insufficient_data() -> None:
+    df = pd.DataFrame(
+        {"Volume": [1000.0] * 5},
+        index=pd.date_range("2025-01-01", periods=5),
+    )
+    with pytest.raises(ValidationError, match="Not enough data"):
+        compute_volume_state(df)
+
+
+def test_compute_volatility_percentile_insufficient_data() -> None:
+    with pytest.raises(ValidationError, match="Not enough data"):
+        compute_volatility_percentile(pd.Series([1.0] * 10))
+
+
+def test_analyze_indicators_rejects_missing_column(sample_ohlcv_df: pd.DataFrame) -> None:
+    with pytest.raises(ValidationError, match="does not exist"):
+        analyze_indicators(sample_ohlcv_df, column="NonExistent")
+
+
+def test_describe_indicators_with_intraday_bar_units(sample_ohlcv_df: pd.DataFrame) -> None:
+    stats = analyze_indicators(sample_ohlcv_df, frequency="15min")
+    text = describe_indicators(stats)
+    assert "bar" in text.lower()

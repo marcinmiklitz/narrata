@@ -26,6 +26,10 @@
 1. **Make agents understand time series.** A raw data dump doesn't give an LLM the context it needs — regime, trend, support/resistance, indicator state. narrata extracts that structure and renders it as natural-language text an agent can act on.
 2. **Minimal token usage.** Every token in a prompt costs latency and money. narrata keeps output as compact as possible — sections that cannot be computed (short history, missing columns) are silently omitted rather than padded with placeholder text.
 
+<p align="center">
+  <img src="./assets/demo.gif" alt="narrata CLI demo" width="720" />
+</p>
+
 ## Installation
 
 From PyPI:

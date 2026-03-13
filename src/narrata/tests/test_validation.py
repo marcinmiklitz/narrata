@@ -109,3 +109,82 @@ def test_narrate_works_with_lowercase_columns(sample_ohlcv_df: pd.DataFrame) -> 
     lower = sample_ohlcv_df.rename(columns=str.lower)
     text = narrate(lower, ticker="TEST")
     assert "TEST" in text
+
+
+def test_validate_rejects_non_dataframe() -> None:
+    with pytest.raises(ValidationError, match="pandas DataFrame"):
+        validate_ohlcv_frame("not a dataframe")  # type: ignore[arg-type]
+
+
+def test_validate_rejects_empty_dataframe() -> None:
+    df = pd.DataFrame(columns=["Open", "High", "Low", "Close"], dtype=float)
+    df.index = pd.DatetimeIndex([])
+    with pytest.raises(ValidationError, match="must not be empty"):
+        validate_ohlcv_frame(df)
+
+
+def test_validate_rejects_duplicate_timestamps(sample_ohlcv_df: pd.DataFrame) -> None:
+    dup = pd.concat([sample_ohlcv_df.head(5), sample_ohlcv_df.head(5)])
+    with pytest.raises(ValidationError, match="duplicate timestamps"):
+        validate_ohlcv_frame(dup)
+
+
+def test_validate_rejects_unsorted_index(sample_ohlcv_df: pd.DataFrame) -> None:
+    rev = sample_ohlcv_df.iloc[::-1]
+    with pytest.raises(ValidationError, match="ascending order"):
+        validate_ohlcv_frame(rev)
+
+
+def test_validate_caches_validated_attr(sample_ohlcv_df: pd.DataFrame) -> None:
+    validate_ohlcv_frame(sample_ohlcv_df)
+    assert sample_ohlcv_df.attrs.get("_narrata_validated") is True
+    # Second call should short-circuit
+    validate_ohlcv_frame(sample_ohlcv_df)
+
+
+def test_infer_frequency_5min() -> None:
+    index = pd.date_range("2025-01-01 09:30", periods=20, freq="5min")
+    assert infer_frequency_label(index) == "5min"
+
+
+def test_infer_frequency_1min() -> None:
+    index = pd.date_range("2025-01-01 09:30", periods=20, freq="1min")
+    assert infer_frequency_label(index) == "1min"
+
+
+def test_infer_frequency_30min() -> None:
+    index = pd.date_range("2025-01-01 09:30", periods=20, freq="30min")
+    assert infer_frequency_label(index) == "30min"
+
+
+def test_infer_frequency_hourly() -> None:
+    index = pd.date_range("2025-01-01 09:00", periods=20, freq="h")
+    assert infer_frequency_label(index) == "hourly"
+
+
+def test_infer_frequency_monthly() -> None:
+    index = pd.date_range("2024-01-01", periods=10, freq="MS")
+    assert infer_frequency_label(index) == "monthly"
+
+
+def test_infer_frequency_business_daily() -> None:
+    index = pd.date_range("2025-01-01", periods=30, freq="B")
+    assert infer_frequency_label(index) == "business-daily"
+
+
+def test_infer_frequency_fallback_median_daily() -> None:
+    # Irregular timestamps but ~daily spacing, pandas can't infer freq
+    import numpy as np
+
+    rng = np.random.default_rng(42)
+    base = pd.date_range("2025-01-01", periods=30, freq="D")
+    # Add small random jitter so pd.infer_freq returns None
+    jittered = base + pd.to_timedelta(rng.integers(0, 3600, 30), unit="s")
+    assert infer_frequency_label(pd.DatetimeIndex(jittered)) == "daily"
+
+
+def test_infer_frequency_fallback_weekly() -> None:
+    # Irregular weekly spacing
+    timestamps = pd.to_datetime(["2025-01-01", "2025-01-08", "2025-01-16", "2025-01-22", "2025-01-29"])
+    result = infer_frequency_label(pd.DatetimeIndex(timestamps))
+    assert result == "weekly"

@@ -160,3 +160,23 @@ def test_compare_with_real_aapl_data(real_aapl_df: pd.DataFrame) -> None:
     assert "AAPL:" in text
     assert "Price:" in text
     assert "Regime:" in text
+
+
+def test_compare_verbose_shows_insufficient(period_pair: tuple[pd.DataFrame, pd.DataFrame]) -> None:
+    """With verbose=True and short data, insufficient labels should appear."""
+    index1 = pd.date_range("2025-01-01", periods=8, freq="D")
+    close1 = pd.Series(range(8), index=index1, dtype=float) * 0.5 + 100.0
+    df1 = pd.DataFrame(
+        {"Open": close1 - 0.2, "High": close1 + 0.4, "Low": close1 - 0.5, "Close": close1, "Volume": 1000},
+        index=index1,
+    )
+
+    index2 = pd.date_range("2025-02-01", periods=8, freq="D")
+    close2 = pd.Series(range(8), index=index2, dtype=float) * 0.5 + 105.0
+    df2 = pd.DataFrame(
+        {"Open": close2 - 0.2, "High": close2 + 0.4, "Low": close2 - 0.5, "Close": close2, "Volume": 1000},
+        index=index2,
+    )
+
+    text = compare(df1, df2, verbose=True)
+    assert "insufficient data" in text.lower()

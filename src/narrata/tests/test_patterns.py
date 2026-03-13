@@ -1,4 +1,5 @@
 import pandas as pd
+import pytest
 
 import narrata.analysis.patterns as patterns
 from narrata.analysis.patterns import (
@@ -8,6 +9,8 @@ from narrata.analysis.patterns import (
     detect_chart_pattern,
     detect_patterns,
 )
+from narrata.exceptions import ValidationError
+from narrata.types import PatternStats
 
 
 def test_detect_chart_pattern_returns_tuple(sample_ohlcv_df: pd.DataFrame) -> None:
@@ -139,3 +142,74 @@ def test_detect_candlestick_pattern_inhouse_detects_inside_bar(monkeypatch) -> N
     name, when = patterns.detect_candlestick_pattern(df)
     assert name == "Inside Bar"
     assert when == dates[-1].date()
+
+
+def test_detect_patterns_rejects_small_lookback(sample_ohlcv_df: pd.DataFrame) -> None:
+    with pytest.raises(ValidationError, match="lookback must be >= 10"):
+        detect_patterns(sample_ohlcv_df, lookback=5)
+
+
+def test_detect_chart_pattern_missing_columns() -> None:
+    dates = pd.date_range("2025-01-01", periods=5, freq="D")
+    df = pd.DataFrame({"Close": [1.0] * 5}, index=dates)
+    with pytest.raises(ValidationError, match="High, Low and Close"):
+        detect_chart_pattern(df)
+
+
+def test_detect_candlestick_too_few_rows() -> None:
+    dates = pd.date_range("2025-01-01", periods=1, freq="D")
+    df = pd.DataFrame(
+        {"Open": [10.0], "High": [11.0], "Low": [9.0], "Close": [10.5], "Volume": [100]},
+        index=dates,
+    )
+    name, when = detect_candlestick_pattern(df)
+    assert name is None
+    assert when is None
+
+
+def test_describe_patterns_none_when_no_pattern() -> None:
+    stats = PatternStats(
+        chart_pattern=None,
+        chart_pattern_since=None,
+        candlestick_pattern=None,
+        candlestick_date=None,
+    )
+    assert describe_patterns(stats) is None
+    assert describe_candlestick(stats) is None
+
+
+def test_detect_candlestick_inhouse_bearish_engulfing(monkeypatch) -> None:
+    monkeypatch.setattr(patterns, "ta", None)
+    dates = pd.date_range("2025-01-01", periods=5, freq="D")
+    # prev: open=11.0, close=13.5 (bullish, close > open)
+    # curr: open=13.5, close=11.0 (bearish, close < open, engulfs prev body)
+    df = pd.DataFrame(
+        {
+            "Open": [10.0, 10.3, 10.8, 11.0, 13.5],
+            "High": [11.0, 11.2, 11.8, 14.0, 14.0],
+            "Low": [9.5, 9.8, 10.1, 10.8, 10.5],
+            "Close": [10.5, 10.9, 11.5, 13.5, 11.0],
+            "Volume": [1000, 1100, 1200, 1300, 1400],
+        },
+        index=dates,
+    )
+    name, when = detect_candlestick_pattern(df)
+    assert name == "Bearish Engulfing"
+    assert when == dates[-1].date()
+
+
+def test_detect_chart_pattern_no_pattern_when_too_few_points() -> None:
+    dates = pd.date_range("2025-01-01", periods=3, freq="D")
+    df = pd.DataFrame(
+        {
+            "Open": [10.0, 11.0, 12.0],
+            "High": [11.0, 12.0, 13.0],
+            "Low": [9.0, 10.0, 11.0],
+            "Close": [10.5, 11.5, 12.5],
+            "Volume": [100, 100, 100],
+        },
+        index=dates,
+    )
+    pattern, since = detect_chart_pattern(df, lookback=60)
+    assert pattern is None
+    assert since is None

@@ -1,9 +1,11 @@
 from datetime import date
 
 import pandas as pd
+import pytest
 
 import narrata.analysis.regimes as regimes
 from narrata.analysis.regimes import analyze_regime, describe_regime
+from narrata.exceptions import ValidationError
 
 
 def test_analyze_regime_returns_expected_labels(sample_ohlcv_df: pd.DataFrame) -> None:
@@ -69,3 +71,27 @@ def test_analyze_regime_uses_rolling_when_ruptures_missing(monkeypatch, sample_o
 
     stats = analyze_regime(sample_ohlcv_df)
     assert (stats.trend_label, stats.volatility_label, stats.start_date) == expected
+
+
+def test_analyze_regime_rejects_missing_column(sample_ohlcv_df: pd.DataFrame) -> None:
+    with pytest.raises(ValidationError, match="does not exist"):
+        analyze_regime(sample_ohlcv_df, column="NonExistent")
+
+
+def test_analyze_regime_rejects_small_window(sample_ohlcv_df: pd.DataFrame) -> None:
+    with pytest.raises(ValidationError, match="window must be >= 5"):
+        analyze_regime(sample_ohlcv_df, window=3)
+
+
+def test_analyze_regime_rejects_insufficient_data() -> None:
+    index = pd.date_range("2025-01-01", periods=10, freq="D")
+    df = pd.DataFrame({"Close": [100.0 + i for i in range(10)]}, index=index)
+    with pytest.raises(ValidationError, match="Not enough data"):
+        analyze_regime(df, window=20)
+
+
+def test_analyze_regime_flat_series_is_ranging() -> None:
+    index = pd.date_range("2025-01-01", periods=60, freq="D")
+    df = pd.DataFrame({"Close": [100.0] * 60}, index=index)
+    stats = analyze_regime(df)
+    assert stats.trend_label == "Ranging"

@@ -67,3 +67,8 @@ def test_describe_summary_handles_nan_change(sample_ohlcv_df: pd.DataFrame) -> N
 def test_describe_summary_without_header(sample_ohlcv_df: pd.DataFrame) -> None:
     text = describe_summary(analyze_summary(sample_ohlcv_df), include_header=False)
     assert text.startswith("Range:")
+
+
+def test_analyze_summary_rejects_invalid_frequency(sample_ohlcv_df: pd.DataFrame) -> None:
+    with pytest.raises(ValidationError, match="Unknown frequency"):
+        analyze_summary(sample_ohlcv_df, frequency="every-other-tuesday")
