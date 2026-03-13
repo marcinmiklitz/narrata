@@ -33,6 +33,7 @@ def narrate(
     symbolic_alphabet_size: int = 8,
     digit_level: bool = False,
     currency_symbol: str = "",
+    precision: int = 2,
     output_format: OutputFormat = "plain",
 ) -> str:
     """Compose selected narration components into one final text output.
@@ -52,6 +53,7 @@ def narrate(
     :param symbolic_alphabet_size: SAX alphabet size.
     :param digit_level: Apply digit-level tokenization to final text.
     :param currency_symbol: Symbol prepended to price values (default: none).
+    :param precision: Decimal places for price values (default: 2).
     :param output_format: Output format.
     :return: Composed narration text.
     """
@@ -90,7 +92,7 @@ def narrate(
 
     if include_summary:
         sections["date_range"] = f"Date range: {summary.start_date.isoformat()} to {summary.end_date.isoformat()}"
-        summary_lines = describe_summary(summary, currency_symbol=currency_symbol, include_header=False).splitlines()
+        summary_lines = describe_summary(summary, currency_symbol=currency_symbol, precision=precision, include_header=False).splitlines()
         sections["range"] = summary_lines[0]
         sections["change"] = summary_lines[1]
 
@@ -130,7 +132,7 @@ def narrate(
     if include_support_resistance:
         try:
             levels = find_support_resistance(df, column=column)
-            sections["levels"] = describe_support_resistance(levels, currency_symbol=currency_symbol)
+            sections["levels"] = describe_support_resistance(levels, currency_symbol=currency_symbol, precision=precision)
         except ValidationError:
             sections["levels"] = "Support: insufficient data  Resistance: insufficient data"
 
