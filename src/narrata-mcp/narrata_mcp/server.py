@@ -77,6 +77,7 @@ class NarrateInput(OhlcvPayload):
     symbolic_word_size: int = Field(default=16, ge=2, le=64)
     symbolic_alphabet_size: int = Field(default=8, ge=2, le=26)
     digit_level: bool = Field(default=False)
+    currency_symbol: str = Field(default="", description="Symbol prepended to price values (e.g. '$', '£').")
     output_format: OutputFormat = Field(default="plain")
 
 
@@ -167,6 +168,7 @@ def narrata_narrate_ohlcv(params: NarrateInput) -> dict[str, Any]:
                 symbolic_word_size=params.symbolic_word_size,
                 symbolic_alphabet_size=params.symbolic_alphabet_size,
                 digit_level=params.digit_level,
+                currency_symbol=params.currency_symbol,
                 output_format=params.output_format,
             )
         }
