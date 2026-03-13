@@ -52,6 +52,32 @@ def test_narrate_from_records_returns_default_text(sample_ohlcv_df: pd.DataFrame
     assert "Support:" in text
 
 
+def test_ohlcv_records_to_frame_allows_close_only_records() -> None:
+    records = [
+        {"timestamp": "2024-01-01T00:00:00", "close": 100.0},
+        {"timestamp": "2024-01-02T00:00:00", "close": 101.0},
+    ]
+
+    frame = ohlcv_records_to_frame(records, ticker="BTC")
+
+    assert list(frame.columns) == ["Close"]
+    assert frame.attrs["ticker"] == "BTC"
+
+
+def test_narrate_from_records_allows_close_only_records() -> None:
+    records = [
+        {"timestamp": f"2024-01-{day:02d}T00:00:00", "close": 100.0 + day}
+        for day in range(1, 25)
+    ]
+
+    text = narrate_from_records(records, ticker="BTC", include_patterns=True)
+
+    assert text.startswith("BTC (")
+    assert "Date range:" in text
+    assert "Support:" in text
+    assert "Candlestick:" not in text
+
+
 def test_summary_from_records_returns_structured_and_text(sample_ohlcv_df: pd.DataFrame) -> None:
     records = _records_from_frame(sample_ohlcv_df)
     payload = summary_from_records(records, ticker="AAPL")

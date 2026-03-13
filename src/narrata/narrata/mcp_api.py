@@ -21,6 +21,7 @@ from narrata.analysis.symbolic import astride_encode, describe_astride, describe
 from narrata.composition.compare import compare
 from narrata.composition.narrate import narrate
 from narrata.exceptions import ValidationError
+from narrata.types import OutputFormat
 from narrata.validation.ohlcv import REQUIRED_OHLCV_COLUMNS, infer_frequency_label
 
 _TIMESTAMP_CANDIDATES: tuple[str, ...] = ("timestamp", "datetime", "date", "time")
@@ -74,8 +75,12 @@ def ohlcv_records_to_frame(
 
     canonical: dict[str, pd.Series] = {}
     for target in REQUIRED_OHLCV_COLUMNS:
-        source = _resolve_ohlcv_column(frame, target)
-        canonical[target] = pd.to_numeric(frame[source], errors="coerce")
+        source = _resolve_ohlcv_column(frame, target, required=False)
+        if source is not None:
+            canonical[target] = pd.to_numeric(frame[source], errors="coerce")
+
+    if "Close" not in canonical:
+        raise ValidationError("Input records are missing required OHLCV field: 'Close'.")
 
     result = pd.DataFrame(canonical, index=frame.index)
     if ticker and ticker.strip():
@@ -107,7 +112,7 @@ def narrate_from_records(
     digit_level: bool = False,
     currency_symbol: str = "",
     precision: int = 2,
-    output_format: str = "plain",
+    output_format: OutputFormat = "plain",
     verbose: bool = False,
 ) -> str:
     """Generate the full narrata text from OHLCV records.
@@ -161,7 +166,7 @@ def narrate_from_records(
         digit_level=digit_level,
         currency_symbol=currency_symbol,
         precision=precision,
-        output_format=output_format,  # type: ignore[arg-type]
+        output_format=output_format,
         verbose=verbose,
     )
 
@@ -433,7 +438,7 @@ def compare_from_records(
     symbolic_word_size: int = 16,
     symbolic_alphabet_size: int = 8,
     symbolic_penalty: float = 3.0,
-    output_format: str = "plain",
+    output_format: OutputFormat = "plain",
     verbose: bool = False,
 ) -> str:
     """Generate a compact diff narrative comparing two OHLCV periods.
@@ -443,14 +448,20 @@ def compare_from_records(
     :param verbose: Show all sections even when empty or insufficient data.
     :return: Compact comparison text.
     """
-    frame_kw = {
-        "ticker": ticker,
-        "timestamp_field": timestamp_field,
-        "deduplicate_timestamps": deduplicate_timestamps,
-        "sort_index": sort_index,
-    }
-    frame_before = ohlcv_records_to_frame(records_before, **frame_kw)
-    frame_after = ohlcv_records_to_frame(records_after, **frame_kw)
+    frame_before = ohlcv_records_to_frame(
+        records_before,
+        ticker=ticker,
+        timestamp_field=timestamp_field,
+        deduplicate_timestamps=deduplicate_timestamps,
+        sort_index=sort_index,
+    )
+    frame_after = ohlcv_records_to_frame(
+        records_after,
+        ticker=ticker,
+        timestamp_field=timestamp_field,
+        deduplicate_timestamps=deduplicate_timestamps,
+        sort_index=sort_index,
+    )
     return compare(
         frame_before,
         frame_after,
@@ -466,7 +477,7 @@ def compare_from_records(
         symbolic_word_size=symbolic_word_size,
         symbolic_alphabet_size=symbolic_alphabet_size,
         symbolic_penalty=symbolic_penalty,
-        output_format=output_format,  # type: ignore[arg-type]
+        output_format=output_format,
         verbose=verbose,
     )
 
@@ -483,12 +494,14 @@ def _resolve_timestamp_column(frame: pd.DataFrame, preferred: str) -> str:
     )
 
 
-def _resolve_ohlcv_column(frame: pd.DataFrame, target: str) -> str:
+def _resolve_ohlcv_column(frame: pd.DataFrame, target: str, *, required: bool = True) -> str | None:
     candidates = _COLUMN_CANDIDATES[target]
     for candidate in candidates:
         if candidate in frame.columns:
             return candidate
-    raise ValidationError(f"Input records are missing required OHLCV field: '{target}'.")
+    if required:
+        raise ValidationError(f"Input records are missing required OHLCV field: '{target}'.")
+    return None
 
 
 def _to_serializable(value: Any) -> Any:

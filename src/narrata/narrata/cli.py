@@ -168,7 +168,7 @@ def _run_compare(argv: list[str]) -> None:
         symbolic_word_size=args.symbolic_word_size,
         symbolic_alphabet_size=args.symbolic_alphabet_size,
         symbolic_penalty=args.symbolic_penalty,
-        output_format=args.output_format,  # type: ignore[arg-type]
+        output_format=args.output_format,
         verbose=args.verbose,
     )
     print(text)
@@ -199,7 +199,7 @@ def _run_narrate(argv: list[str] | None) -> None:
         digit_level=args.digit_level,
         currency_symbol=args.currency,
         precision=args.precision,
-        output_format=args.output_format,  # type: ignore[arg-type]
+        output_format=args.output_format,
         verbose=args.verbose,
     )
     print(text)

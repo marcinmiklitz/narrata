@@ -33,6 +33,21 @@ def test_analyze_summary_rejects_missing_column(sample_ohlcv_df: pd.DataFrame) -
         analyze_summary(sample_ohlcv_df, column="AdjustedClose")
 
 
+def test_analyze_summary_uses_first_and_last_numeric_timestamps() -> None:
+    frame = pd.DataFrame(
+        {"Close": [None, 10.0, 12.0, None]},
+        index=pd.to_datetime(["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04"]),
+    )
+
+    stats = analyze_summary(frame)
+
+    assert stats.points == 2
+    assert stats.start_date == pd.Timestamp("2024-01-02").date()
+    assert stats.end_date == pd.Timestamp("2024-01-03").date()
+    assert stats.start == pytest.approx(10.0)
+    assert stats.end == pytest.approx(12.0)
+
+
 def test_describe_summary_formats_compact_text(sample_ohlcv_df: pd.DataFrame) -> None:
     stats = analyze_summary(sample_ohlcv_df)
     text = describe_summary(stats)

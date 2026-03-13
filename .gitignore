@@ -12,10 +12,12 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+.memsearch/
 .DS_Store
 .vscode/
 
 site/
+assets/other_logo/
 
 # Custom
 PROPOSAL.md

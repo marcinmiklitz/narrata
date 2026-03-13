@@ -10,6 +10,11 @@ def test_compute_rsi_returns_bounded_value(sample_ohlcv_df: pd.DataFrame) -> Non
     assert 0.0 <= value <= 100.0
 
 
+def test_compute_rsi_flat_series_is_neutral() -> None:
+    series = pd.Series([100.0] * 20)
+    assert compute_rsi(series) == pytest.approx(50.0)
+
+
 def test_compute_macd_returns_three_values(sample_ohlcv_df: pd.DataFrame) -> None:
     macd, signal, hist = compute_macd(sample_ohlcv_df["Close"])
     assert isinstance(macd, float)
@@ -21,6 +26,18 @@ def test_analyze_indicators_has_states(sample_ohlcv_df: pd.DataFrame) -> None:
     stats = analyze_indicators(sample_ohlcv_df)
     assert stats.rsi_state in {"overbought", "oversold", "neutral-bullish", "neutral-bearish"}
     assert stats.macd_state
+
+
+def test_analyze_indicators_flat_series_does_not_report_extreme_rsi_or_volatility() -> None:
+    index = pd.date_range("2025-01-01", periods=40, freq="D")
+    frame = pd.DataFrame({"Close": 100.0}, index=index)
+
+    stats = analyze_indicators(frame)
+
+    assert stats.rsi_value == pytest.approx(50.0)
+    assert stats.rsi_state == "neutral-bullish"
+    assert stats.volatility_percentile == pytest.approx(50.0)
+    assert stats.volatility_state == "moderate"
 
 
 def test_describe_indicators_format(sample_ohlcv_df: pd.DataFrame) -> None:

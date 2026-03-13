@@ -38,10 +38,16 @@ def compute_rsi(series: pd.Series, period: int = 14) -> float:
     losses = -delta.clip(upper=0.0)
     avg_gain = gains.ewm(alpha=1.0 / period, adjust=False).mean()
     avg_loss = losses.ewm(alpha=1.0 / period, adjust=False).mean()
-    rs = avg_gain / avg_loss.replace(0.0, np.nan)
-    rsi = 100.0 - (100.0 / (1.0 + rs))
+    latest_gain = float(avg_gain.iloc[-1])
+    latest_loss = float(avg_loss.iloc[-1])
+    if np.isclose(latest_gain, 0.0) and np.isclose(latest_loss, 0.0):
+        latest = 50.0
+    elif np.isclose(latest_loss, 0.0):
+        latest = 100.0
+    else:
+        rs = latest_gain / latest_loss
+        latest = 100.0 - (100.0 / (1.0 + rs))
 
-    latest = float(rsi.iloc[-1]) if not np.isnan(rsi.iloc[-1]) else 100.0
     return max(0.0, min(100.0, latest))
 
 
@@ -206,7 +212,9 @@ def compute_volatility_percentile(series: pd.Series, window: int = 20, lookback:
 
     current_vol = float(rolling_vol.iloc[-1])
     rank_window = rolling_vol.tail(min(lookback, rolling_vol.size))
-    percentile = float((rank_window <= current_vol).sum() / rank_window.size * 100.0)
+    lower_count = int((rank_window < current_vol).sum())
+    equal_count = int((rank_window == current_vol).sum())
+    percentile = float((lower_count + 0.5 * equal_count) / rank_window.size * 100.0)
     percentile = round(percentile, 0)
 
     if percentile <= 10:
