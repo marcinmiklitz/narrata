@@ -108,6 +108,7 @@ def narrate_from_records(
     currency_symbol: str = "",
     precision: int = 2,
     output_format: str = "plain",
+    verbose: bool = False,
 ) -> str:
     """Generate the full narrata text from OHLCV records.
 
@@ -131,6 +132,7 @@ def narrate_from_records(
     :param currency_symbol: Symbol prepended to price values.
     :param precision: Decimal places for price values.
     :param output_format: Output format (plain, markdown_kv, toon).
+    :param verbose: Show all sections even when empty or insufficient data.
     :return: Full narrata output text.
     """
     frame = ohlcv_records_to_frame(
@@ -160,6 +162,7 @@ def narrate_from_records(
         currency_symbol=currency_symbol,
         precision=precision,
         output_format=output_format,  # type: ignore[arg-type]
+        verbose=verbose,
     )
 
 
@@ -431,11 +434,13 @@ def compare_from_records(
     symbolic_alphabet_size: int = 8,
     symbolic_penalty: float = 3.0,
     output_format: str = "plain",
+    verbose: bool = False,
 ) -> str:
     """Generate a compact diff narrative comparing two OHLCV periods.
 
     :param records_before: OHLCV records for the earlier period.
     :param records_after: OHLCV records for the later period.
+    :param verbose: Show all sections even when empty or insufficient data.
     :return: Compact comparison text.
     """
     frame_kw = {
@@ -462,6 +467,7 @@ def compare_from_records(
         symbolic_alphabet_size=symbolic_alphabet_size,
         symbolic_penalty=symbolic_penalty,
         output_format=output_format,  # type: ignore[arg-type]
+        verbose=verbose,
     )
 
 

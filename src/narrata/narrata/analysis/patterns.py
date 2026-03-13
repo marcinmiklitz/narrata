@@ -184,23 +184,23 @@ def _detect_candlestick_inhouse(df: pd.DataFrame) -> tuple[str | None, date | No
     return None, None
 
 
-def describe_patterns(stats: PatternStats) -> str:
+def describe_patterns(stats: PatternStats) -> str | None:
     """Render chart pattern line.
 
     :param stats: Pattern detection results.
-    :return: Human-readable chart pattern narration.
+    :return: Human-readable chart pattern narration, or None if nothing detected.
     """
     if stats.chart_pattern is None or stats.chart_pattern_since is None:
-        return "Patterns: none detected"
+        return None
     return f"Patterns: {stats.chart_pattern} forming since {stats.chart_pattern_since.isoformat()}"
 
 
-def describe_candlestick(stats: PatternStats) -> str:
+def describe_candlestick(stats: PatternStats) -> str | None:
     """Render candlestick line.
 
     :param stats: Pattern detection results.
-    :return: Human-readable candlestick narration.
+    :return: Human-readable candlestick narration, or None if nothing detected.
     """
     if stats.candlestick_pattern is None or stats.candlestick_date is None:
-        return "Candlestick: none detected"
+        return None
     return f"Candlestick: {stats.candlestick_pattern} on {stats.candlestick_date.isoformat()}"

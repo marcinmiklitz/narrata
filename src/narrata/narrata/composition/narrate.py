@@ -38,6 +38,7 @@ def narrate(
     currency_symbol: str = "",
     precision: int = 2,
     output_format: OutputFormat = "plain",
+    verbose: bool = False,
 ) -> str:
     """Compose selected narration components into one final text output.
 
@@ -62,6 +63,7 @@ def narrate(
     :param currency_symbol: Symbol prepended to price values (default: none).
     :param precision: Decimal places for price values (default: 2).
     :param output_format: Output format.
+    :param verbose: Show all sections even when empty or insufficient data.
     :return: Composed narration text.
     """
     df = normalize_columns(df)
@@ -109,7 +111,8 @@ def narrate(
         try:
             sections["regime"] = describe_regime(analyze_regime(df, column=column))
         except ValidationError:
-            pass
+            if verbose:
+                sections["regime"] = "Regime: insufficient data"
 
     if include_indicators:
         try:
@@ -117,7 +120,8 @@ def narrate(
                 analyze_indicators(df, column=column, frequency=summary.frequency)
             )
         except ValidationError:
-            pass
+            if verbose:
+                sections["indicators"] = "Indicators: insufficient data"
 
     if include_symbolic:
         try:
@@ -139,15 +143,23 @@ def narrate(
                 )
                 sections["symbolic"] = describe_sax(symbolic)
         except ValidationError:
-            pass
+            if verbose:
+                label = "ASTRIDE" if symbolic_method == "astride" else f"SAX({symbolic_word_size})"
+                sections["symbolic"] = f"{label}: insufficient data"
 
     if include_patterns:
         try:
             pattern_stats = detect_patterns(df)
-            sections["patterns"] = describe_patterns(pattern_stats)
-            sections["candlestick"] = describe_candlestick(pattern_stats)
+            pat = describe_patterns(pattern_stats)
+            cand = describe_candlestick(pattern_stats)
+            if pat is not None or verbose:
+                sections["patterns"] = pat or "Patterns: none detected"
+            if cand is not None or verbose:
+                sections["candlestick"] = cand or "Candlestick: none detected"
         except ValidationError:
-            pass
+            if verbose:
+                sections["patterns"] = "Patterns: insufficient data"
+                sections["candlestick"] = "Candlestick: insufficient data"
 
     if include_support_resistance:
         try:
@@ -156,7 +168,8 @@ def narrate(
                 levels, currency_symbol=currency_symbol, precision=precision
             )
         except ValidationError:
-            pass
+            if verbose:
+                sections["levels"] = "Support: insufficient data  Resistance: insufficient data"
 
     rendered = format_sections(sections, output_format=output_format)
     if digit_level:

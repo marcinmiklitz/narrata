@@ -92,6 +92,7 @@ def compare(
     symbolic_alphabet_size: int = 8,
     symbolic_penalty: float = 3.0,
     output_format: OutputFormat = "plain",
+    verbose: bool = False,
 ) -> str:
     """Compare two time periods and produce a compact diff narrative.
 
@@ -112,6 +113,7 @@ def compare(
     :param symbolic_alphabet_size: Symbol alphabet size.
     :param symbolic_penalty: ASTRIDE ruptures penalty.
     :param output_format: Output format.
+    :param verbose: Show all sections even when empty or insufficient data.
     :return: Compact diff narrative text.
     """
     df_before = normalize_columns(df_before)
@@ -152,11 +154,15 @@ def compare(
         f" \u2192 [{_fmt_price(sum_b.minimum, cs, p)}, {_fmt_price(sum_b.maximum, cs, p)}]"
     )
 
+    _na = "insufficient data"
+
     if include_regime:
         ra = _regime_short(df_before, column)
         rb = _regime_short(df_after, column)
         if ra is not None and rb is not None:
             sections["regime"] = f"Regime: {ra} \u2192 {rb}"
+        elif verbose:
+            sections["regime"] = f"Regime: {ra or _na} \u2192 {rb or _na}"
 
     if include_indicators:
         ia = _indicators_short(df_before, column, frequency=sum_a.frequency)
@@ -168,6 +174,9 @@ def compare(
                 sections["volume"] = f"Volume: {ia['volume']} \u2192 {ib['volume']}"
             if "volatility" in ia and "volatility" in ib:
                 sections["volatility"] = f"Volatility: {ia['volatility']} \u2192 {ib['volatility']}"
+        elif verbose:
+            sections["rsi"] = f"RSI(14): {_na} \u2192 {_na}"
+            sections["macd"] = f"MACD: {_na} \u2192 {_na}"
 
     if include_symbolic:
         sa = _symbolic_short(
@@ -178,6 +187,8 @@ def compare(
         )
         if sa is not None and sb is not None:
             sections["symbolic"] = f"{sa} \u2192 {sb}"
+        elif verbose:
+            sections["symbolic"] = f"{sa or _na} \u2192 {sb or _na}"
 
     if include_support_resistance:
         levels_a = _levels_short(df_before, column, cs, p)
@@ -187,5 +198,8 @@ def compare(
             sup_b, res_b = levels_b
             sections["support"] = f"Support: {sup_a} \u2192 {sup_b}"
             sections["resistance"] = f"Resistance: {res_a} \u2192 {res_b}"
+        elif verbose:
+            sections["support"] = f"Support: {_na} \u2192 {_na}"
+            sections["resistance"] = f"Resistance: {_na} \u2192 {_na}"
 
     return format_sections(sections, output_format=output_format)

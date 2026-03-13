@@ -87,6 +87,7 @@ class NarrateInput(OhlcvPayload):
     currency_symbol: str = Field(default="", description="Symbol prepended to price values (e.g. '$', '£').")
     precision: int = Field(default=2, ge=0, le=10, description="Decimal places for price values.")
     output_format: OutputFormat = Field(default="plain")
+    verbose: bool = Field(default=False, description="Show all sections, including empty or insufficient data.")
 
 
 class ColumnInput(OhlcvPayload):
@@ -169,6 +170,7 @@ class CompareInput(BaseModel):
     symbolic_alphabet_size: int = Field(default=8, ge=2, le=26)
     symbolic_penalty: float = Field(default=3.0, gt=0.0, le=100.0)
     output_format: OutputFormat = Field(default="plain")
+    verbose: bool = Field(default=False, description="Show all sections, including empty or insufficient data.")
 
     @field_validator("timestamp_field", mode="before")
     @classmethod
@@ -217,6 +219,7 @@ def narrata_compare_ohlcv(params: CompareInput) -> dict[str, Any]:
                 symbolic_alphabet_size=params.symbolic_alphabet_size,
                 symbolic_penalty=params.symbolic_penalty,
                 output_format=params.output_format,
+                verbose=params.verbose,
             )
         }
     except NarrataError as exc:

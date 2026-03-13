@@ -61,6 +61,8 @@ def _build_narrate_parser() -> argparse.ArgumentParser:
     for section in ("summary", "sparkline", "regime", "indicators", "symbolic", "patterns", "support-resistance"):
         p.add_argument(f"--no-{section}", action="store_true", help=f"Disable the {section} section.")
 
+    p.add_argument("--verbose", action="store_true", help="Show all sections, including empty or insufficient data.")
+
     return p
 
 
@@ -105,6 +107,8 @@ def _build_compare_parser() -> argparse.ArgumentParser:
 
     for section in ("regime", "indicators", "symbolic", "support-resistance"):
         p.add_argument(f"--no-{section}", action="store_true", help=f"Disable the {section} section.")
+
+    p.add_argument("--verbose", action="store_true", help="Show all sections, including empty or insufficient data.")
 
     return p
 
@@ -165,6 +169,7 @@ def _run_compare(argv: list[str]) -> None:
         symbolic_alphabet_size=args.symbolic_alphabet_size,
         symbolic_penalty=args.symbolic_penalty,
         output_format=args.output_format,  # type: ignore[arg-type]
+        verbose=args.verbose,
     )
     print(text)
 
@@ -195,6 +200,7 @@ def _run_narrate(argv: list[str] | None) -> None:
         currency_symbol=args.currency,
         precision=args.precision,
         output_format=args.output_format,  # type: ignore[arg-type]
+        verbose=args.verbose,
     )
     print(text)
 
