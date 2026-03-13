@@ -33,6 +33,9 @@ all = [
     "ruptures>=1.1.9; python_version < '3.14'",
 ]
 
+[project.scripts]
+narrata = "narrata.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/marcinmiklitz/narrata"
 Documentation = "https://marcinmiklitz.github.io/narrata/"

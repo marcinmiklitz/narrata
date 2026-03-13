@@ -39,6 +39,31 @@ Avoid internal/private helpers unless explicitly requested.
   - unsorted/duplicate timestamps where the caller does not want auto-fix
 - For user-facing examples, use 80+ rows when demonstrating full `narrate(df)` output.
 
+## CLI guidance
+
+narrata ships a CLI that reads OHLCV CSV files and prints narration to stdout:
+
+```bash
+# From a file
+narrata data.csv --ticker AAPL
+
+# From stdin (pipe-friendly)
+cat data.csv | narrata --ticker AAPL
+
+# Select output format
+narrata data.csv --format markdown_kv
+
+# Disable specific sections
+narrata data.csv --no-patterns --no-support-resistance
+
+# Digit-level tokenization
+narrata data.csv --digit-level
+```
+
+The CSV must have a DatetimeIndex as the first column and `Open`, `High`, `Low`, `Close`, `Volume` columns. All `narrate()` parameters are exposed as flags — run `narrata --help` for the full list.
+
+Install: `uv tool install narrata[all]` or `pip install narrata[all]`.
+
 ## MCP guidance
 
 If user wants MCP integration:
