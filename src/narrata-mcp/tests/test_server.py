@@ -53,6 +53,11 @@ def _open_session() -> Any:
     return stdio_client(server)
 
 
+# ---------------------------------------------------------------------------
+# Tool listing
+# ---------------------------------------------------------------------------
+
+
 def test_mcp_lists_expected_tools() -> None:
     async def _run() -> None:
         async with _open_session() as (read, write):
@@ -74,24 +79,292 @@ def test_mcp_lists_expected_tools() -> None:
     anyio.run(_run)
 
 
-def test_mcp_tool_calls_return_expected_shapes() -> None:
+# ---------------------------------------------------------------------------
+# narrata_narrate_ohlcv
+# ---------------------------------------------------------------------------
+
+
+def test_narrate_default() -> None:
     async def _run() -> None:
         payload = {"points": _build_points(120), "ticker": "AAPL"}
         async with _open_session() as (read, write):
             async with ClientSession(read, write) as session:
                 await session.initialize()
+                result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "text" in data
+                text = data["text"]
+                assert "AAPL (" in text
+                assert "Date range:" in text
+                assert "Regime:" in text
+                assert "RSI(" in text
+                assert "SAX(" in text
+                assert "Support:" in text
 
-                narrate_result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
-                narrate_payload = _tool_text_payload(narrate_result)
-                assert "text" in narrate_payload
-                assert "AAPL (" in narrate_payload["text"]
-                assert "Date range:" in narrate_payload["text"]
+    anyio.run(_run)
 
-                summary_result = await session.call_tool("narrata_summary_ohlcv", {"params": payload})
-                summary_payload = _tool_text_payload(summary_result)
-                assert "summary" in summary_payload
-                assert "text" in summary_payload
-                assert summary_payload["summary"]["ticker"] == "AAPL"
-                assert isinstance(summary_payload["summary"]["start_date"], str)
+
+def test_narrate_with_currency_symbol() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "ticker": "AAPL", "currency_symbol": "$"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "$" in data["text"]
+
+    anyio.run(_run)
+
+
+def test_narrate_no_currency_by_default() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "ticker": "AAPL"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "$" not in data["text"]
+
+    anyio.run(_run)
+
+
+def test_narrate_section_toggles() -> None:
+    async def _run() -> None:
+        payload = {
+            "points": _build_points(120),
+            "ticker": "TEST",
+            "include_regime": False,
+            "include_indicators": False,
+            "include_symbolic": False,
+            "include_patterns": False,
+            "include_support_resistance": False,
+        }
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                text = data["text"]
+                assert "TEST (" in text
+                assert "Date range:" in text
+                assert "Regime:" not in text
+                assert "RSI(" not in text
+                assert "SAX(" not in text
+                assert "Support:" not in text
+
+    anyio.run(_run)
+
+
+def test_narrate_markdown_kv_format() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "output_format": "markdown_kv"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "**" in data["text"]
+
+    anyio.run(_run)
+
+
+# ---------------------------------------------------------------------------
+# narrata_summary_ohlcv
+# ---------------------------------------------------------------------------
+
+
+def test_summary() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "ticker": "AAPL"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_summary_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "summary" in data
+                assert "text" in data
+                assert data["summary"]["ticker"] == "AAPL"
+                assert isinstance(data["summary"]["start_date"], str)
+                assert isinstance(data["summary"]["points"], int)
+                assert data["summary"]["points"] == 120
+
+    anyio.run(_run)
+
+
+# ---------------------------------------------------------------------------
+# narrata_regime_ohlcv
+# ---------------------------------------------------------------------------
+
+
+def test_regime() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "ticker": "AAPL"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_regime_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "regime" in data
+                assert "text" in data
+                assert "trend_label" in data["regime"]
+                assert "volatility_label" in data["regime"]
+
+    anyio.run(_run)
+
+
+# ---------------------------------------------------------------------------
+# narrata_indicators_ohlcv
+# ---------------------------------------------------------------------------
+
+
+def test_indicators() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "ticker": "AAPL"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_indicators_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "indicators" in data
+                assert "text" in data
+                assert "rsi_value" in data["indicators"]
+                assert "macd_state" in data["indicators"]
+
+    anyio.run(_run)
+
+
+# ---------------------------------------------------------------------------
+# narrata_symbolic_sax_ohlcv
+# ---------------------------------------------------------------------------
+
+
+def test_sax() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "word_size": 8, "alphabet_size": 4}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_symbolic_sax_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "symbolic" in data
+                assert "text" in data
+                assert "symbols" in data["symbolic"]
+                assert "word_size" in data["symbolic"]
+
+    anyio.run(_run)
+
+
+# ---------------------------------------------------------------------------
+# narrata_symbolic_astride_ohlcv
+# ---------------------------------------------------------------------------
+
+
+def test_astride() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120)}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_symbolic_astride_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "symbolic" in data
+                assert "text" in data
+
+    anyio.run(_run)
+
+
+# ---------------------------------------------------------------------------
+# narrata_patterns_ohlcv
+# ---------------------------------------------------------------------------
+
+
+def test_patterns() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120)}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_patterns_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "patterns" in data
+                assert "chart_text" in data
+                assert "candlestick_text" in data
+
+    anyio.run(_run)
+
+
+# ---------------------------------------------------------------------------
+# narrata_levels_ohlcv
+# ---------------------------------------------------------------------------
+
+
+def test_levels() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "ticker": "AAPL"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_levels_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "levels" in data
+                assert "text" in data
+                assert "supports" in data["levels"]
+                assert "resistances" in data["levels"]
+
+    anyio.run(_run)
+
+
+# ---------------------------------------------------------------------------
+# Edge cases
+# ---------------------------------------------------------------------------
+
+
+def test_short_series_does_not_error() -> None:
+    """Short data should degrade gracefully, not crash the server."""
+
+    async def _run() -> None:
+        payload = {"points": _build_points(10), "ticker": "SHORT"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "SHORT (" in data["text"]
+
+    anyio.run(_run)
+
+
+def test_lowercase_column_names_accepted() -> None:
+    """Server should accept lowercase OHLCV field names."""
+
+    async def _run() -> None:
+        points = _build_points(120)
+        payload = {"points": points, "ticker": "LC"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_summary_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert data["summary"]["points"] == 120
+
+    anyio.run(_run)
+
+
+def test_no_volume_accepted() -> None:
+    """Points without volume should still work."""
+
+    async def _run() -> None:
+        points = _build_points(120)
+        for p in points:
+            del p["volume"]
+        payload = {"points": points, "ticker": "NOVOL"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "NOVOL (" in data["text"]
 
     anyio.run(_run)

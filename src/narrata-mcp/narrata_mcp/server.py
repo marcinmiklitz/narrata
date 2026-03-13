@@ -392,7 +392,7 @@ def _records(points: list[OhlcvPoint]) -> list[dict[str, Any]]:
 
 def main() -> None:
     """Run the FastMCP server over stdio transport."""
-    mcp.run()
+    mcp.run(show_banner=False)
 
 
 if __name__ == "__main__":
