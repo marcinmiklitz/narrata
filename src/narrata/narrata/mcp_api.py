@@ -18,6 +18,7 @@ from narrata.analysis.regimes import analyze_regime, describe_regime
 from narrata.analysis.summary import analyze_summary, describe_summary
 from narrata.analysis.support_resistance import describe_support_resistance, find_support_resistance
 from narrata.analysis.symbolic import astride_encode, describe_astride, describe_sax, sax_encode
+from narrata.composition.compare import compare
 from narrata.composition.narrate import narrate
 from narrata.exceptions import ValidationError
 from narrata.validation.ohlcv import REQUIRED_OHLCV_COLUMNS
@@ -402,6 +403,59 @@ def levels_from_records(
         extrema_order=extrema_order,
     )
     return {"levels": _to_serializable(stats), "text": describe_support_resistance(stats)}
+
+
+def compare_from_records(
+    records_before: list[dict[str, Any]],
+    records_after: list[dict[str, Any]],
+    *,
+    ticker: str | None = None,
+    timestamp_field: str = "timestamp",
+    deduplicate_timestamps: bool = True,
+    sort_index: bool = True,
+    column: str = "Close",
+    currency_symbol: str = "",
+    precision: int = 2,
+    include_regime: bool = True,
+    include_indicators: bool = True,
+    include_symbolic: bool = True,
+    include_support_resistance: bool = True,
+    symbolic_method: str = "sax",
+    symbolic_word_size: int = 16,
+    symbolic_alphabet_size: int = 8,
+    symbolic_penalty: float = 3.0,
+    output_format: str = "plain",
+) -> str:
+    """Generate a compact diff narrative comparing two OHLCV periods.
+
+    :param records_before: OHLCV records for the earlier period.
+    :param records_after: OHLCV records for the later period.
+    :return: Compact comparison text.
+    """
+    frame_kw = {
+        "ticker": ticker,
+        "timestamp_field": timestamp_field,
+        "deduplicate_timestamps": deduplicate_timestamps,
+        "sort_index": sort_index,
+    }
+    frame_before = ohlcv_records_to_frame(records_before, **frame_kw)
+    frame_after = ohlcv_records_to_frame(records_after, **frame_kw)
+    return compare(
+        frame_before,
+        frame_after,
+        column=column,
+        currency_symbol=currency_symbol,
+        precision=precision,
+        include_regime=include_regime,
+        include_indicators=include_indicators,
+        include_symbolic=include_symbolic,
+        include_support_resistance=include_support_resistance,
+        symbolic_method=symbolic_method,
+        symbolic_word_size=symbolic_word_size,
+        symbolic_alphabet_size=symbolic_alphabet_size,
+        symbolic_penalty=symbolic_penalty,
+        output_format=output_format,  # type: ignore[arg-type]
+    )
 
 
 def _resolve_timestamp_column(frame: pd.DataFrame, preferred: str) -> str:

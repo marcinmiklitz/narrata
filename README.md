@@ -166,6 +166,34 @@ print(text_block)
 print(f"Close sparkline: {spark}")
 ```
 
+## Compare two periods
+
+`compare(...)` produces a compact diff narrative showing how a series changed between two time windows:
+
+```python
+from narrata import compare
+
+df_q1 = df["2025-01":"2025-03"]
+df_q2 = df["2025-04":"2025-06"]
+print(compare(df_q1, df_q2, ticker="AAPL"))
+```
+
+Example output:
+
+```text
+AAPL: 2025-01-02..2025-03-31 → 2025-04-01..2025-06-30
+Price: 243.54 → 215.30 (-11.6%)
+Range: [220.10, 260.40] → [195.40, 230.10]
+Regime: Uptrend (low vol) → Downtrend (high vol)
+RSI(14): 58.2 (neutral) → 32.4 (neutral-bearish)
+MACD: bullish → bearish crossover
+Volume: 1.02x avg (average) → 0.85x avg (below average)
+Volatility: 42nd pctl (moderate) → 85th pctl (high)
+SAX(16): ddccbbaa → aabbccdd
+Support: 225.40, 220.10 → 195.40, 200.10
+Resistance: 255.80, 260.40 → 225.80, 230.10
+```
+
 ## Output formats
 
 Four output formats are available: `plain`, `markdown_kv`, `toon`, and `json`.
@@ -243,6 +271,9 @@ narrata prices.csv --ticker AAPL --symbolic-method astride
 
 # Disable specific sections
 narrata prices.csv --ticker AAPL --no-patterns --no-support-resistance
+
+# Compare two periods side-by-side
+narrata compare q1.csv q2.csv --ticker AAPL
 ```
 
 The input must have a datetime column as its index and OHLC columns (Volume is optional). Column names are case-insensitive. Run `narrata --help` for all options.
@@ -308,6 +339,7 @@ Add to your `claude_desktop_config.json`:
 - Compact Unicode sparklines
 - Output formatting helpers (`plain`, `markdown_kv`, `toon`)
 - High-level `narrate(...)` composition
+- Period comparison via `compare(...)`
 
 ## FAQ
 

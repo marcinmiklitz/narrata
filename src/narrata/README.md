@@ -92,6 +92,18 @@ Candlestick: Inside Bar on 2026-02-13
 Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches), 481.63 (21 touches)
 ```
 
+## Compare two periods
+
+```python
+from narrata import compare
+
+df_q1 = df["2025-01":"2025-03"]
+df_q2 = df["2025-04":"2025-06"]
+print(compare(df_q1, df_q2, ticker="AAPL"))
+```
+
+Produces a compact diff narrative with `→` arrows showing changes in price, regime, indicators, symbolic encoding, and support/resistance between the two periods.
+
 ## CLI
 
 ```bash
@@ -108,6 +120,9 @@ narrata prices.csv --format json
 
 # Precision and ASTRIDE encoding
 narrata prices.csv --precision 0 --symbolic-method astride
+
+# Compare two periods
+narrata compare q1.csv q2.csv --ticker AAPL
 ```
 
 Run `narrata --help` for all options.

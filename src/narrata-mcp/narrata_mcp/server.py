@@ -8,6 +8,7 @@ from fastmcp import FastMCP
 from narrata.exceptions import NarrataError
 from narrata.mcp_api import (
     astride_from_records,
+    compare_from_records,
     indicators_from_records,
     levels_from_records,
     narrate_from_records,
@@ -131,6 +132,82 @@ class LevelsInput(ColumnInput):
     tolerance_ratio: float = Field(default=0.01, gt=0.0, le=0.25)
     max_levels: int = Field(default=2, ge=1, le=10)
     extrema_order: int = Field(default=5, ge=1, le=50)
+
+
+class CompareInput(BaseModel):
+    """Input for comparing two OHLCV periods."""
+
+    model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
+
+    points_before: list[OhlcvPoint] = Field(min_length=2, description="OHLCV points for the earlier period.")
+    points_after: list[OhlcvPoint] = Field(min_length=2, description="OHLCV points for the later period.")
+    ticker: str | None = Field(default=None, description="Optional ticker symbol.")
+    timestamp_field: str = Field(default="timestamp", description="Timestamp key name in each point.")
+    deduplicate_timestamps: bool = Field(default=True)
+    sort_index: bool = Field(default=True)
+    column: str = Field(default="Close", description="Price column to analyze.")
+    currency_symbol: str = Field(default="", description="Symbol prepended to price values.")
+    precision: int = Field(default=2, ge=0, le=10, description="Decimal places for price values.")
+    include_regime: bool = Field(default=True)
+    include_indicators: bool = Field(default=True)
+    include_symbolic: bool = Field(default=True)
+    include_support_resistance: bool = Field(default=True)
+    symbolic_method: Literal["sax", "astride"] = Field(default="sax")
+    symbolic_word_size: int = Field(default=16, ge=2, le=64)
+    symbolic_alphabet_size: int = Field(default=8, ge=2, le=26)
+    symbolic_penalty: float = Field(default=3.0, gt=0.0, le=100.0)
+    output_format: OutputFormat = Field(default="plain")
+
+    @field_validator("timestamp_field", mode="before")
+    @classmethod
+    def validate_timestamp_field(cls, value: Any) -> Any:
+        if isinstance(value, str) and value.strip():
+            return value
+        raise ValueError("timestamp_field must be a non-empty string.")
+
+
+@mcp.tool(
+    name="narrata_compare_ohlcv",
+    annotations={
+        "readOnlyHint": True,
+        "destructiveHint": False,
+        "idempotentHint": True,
+        "openWorldHint": False,
+    },
+)
+def narrata_compare_ohlcv(params: CompareInput) -> dict[str, Any]:
+    """Compare two OHLCV periods and produce a compact diff narrative.
+
+    Useful for answering questions like "how did AAPL change between Q1 and Q2?"
+
+    :param params: Two sets of OHLCV points and comparison settings.
+    :return: Dict with one field: ``text``.
+    """
+    try:
+        return {
+            "text": compare_from_records(
+                _records(params.points_before),
+                _records(params.points_after),
+                ticker=params.ticker,
+                timestamp_field=params.timestamp_field,
+                deduplicate_timestamps=params.deduplicate_timestamps,
+                sort_index=params.sort_index,
+                column=params.column,
+                currency_symbol=params.currency_symbol,
+                precision=params.precision,
+                include_regime=params.include_regime,
+                include_indicators=params.include_indicators,
+                include_symbolic=params.include_symbolic,
+                include_support_resistance=params.include_support_resistance,
+                symbolic_method=params.symbolic_method,
+                symbolic_word_size=params.symbolic_word_size,
+                symbolic_alphabet_size=params.symbolic_alphabet_size,
+                symbolic_penalty=params.symbolic_penalty,
+                output_format=params.output_format,
+            )
+        }
+    except NarrataError as exc:
+        raise ValueError(str(exc)) from exc
 
 
 @mcp.tool(

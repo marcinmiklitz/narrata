@@ -96,7 +96,9 @@ def narrate(
 
     if include_summary:
         sections["date_range"] = f"Date range: {summary.start_date.isoformat()} to {summary.end_date.isoformat()}"
-        summary_lines = describe_summary(summary, currency_symbol=currency_symbol, precision=precision, include_header=False).splitlines()
+        summary_lines = describe_summary(
+            summary, currency_symbol=currency_symbol, precision=precision, include_header=False
+        ).splitlines()
         sections["range"] = summary_lines[0]
         sections["change"] = summary_lines[1]
 
@@ -147,7 +149,9 @@ def narrate(
     if include_support_resistance:
         try:
             levels = find_support_resistance(df, column=column)
-            sections["levels"] = describe_support_resistance(levels, currency_symbol=currency_symbol, precision=precision)
+            sections["levels"] = describe_support_resistance(
+                levels, currency_symbol=currency_symbol, precision=precision
+            )
         except ValidationError:
             sections["levels"] = "Support: insufficient data  Resistance: insufficient data"
 

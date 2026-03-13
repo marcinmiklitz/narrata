@@ -51,20 +51,33 @@ Provide a concise trend interpretation and key risk caveats.
 """
 ```
 
-## 4. Optional: markdown key-value output
+## 4. Compare two periods
+
+```python
+from narrata import compare
+
+df_h1 = df[:"2025-08"]
+df_h2 = df["2025-08":]
+print(compare(df_h1, df_h2, ticker="AAPL"))
+```
+
+This produces a compact `→` diff narrative showing how price, regime, indicators, and levels changed between the two windows. Useful for prompt context like "how did AAPL change between H1 and H2?"
+
+## 5. Optional: markdown key-value output
 
 ```python
 markdown_text = narrate(df, output_format="markdown_kv")
 print(markdown_text)
 ```
 
-## 5. Public imports
+## 6. Public imports
 
 All public methods are available from top-level `narrata` imports.
 
 ```python
 from narrata import (
     narrate,
+    compare,
     analyze_summary,
     analyze_regime,
     analyze_indicators,
@@ -89,7 +102,7 @@ import narrata
 print(narrata.__all__)
 ```
 
-## 6. Compare fallback-only vs extras-enabled output
+## 7. Compare fallback-only vs extras-enabled output
 
 <!-- BACKEND_COMPARISON_TUTORIAL:START -->
 This comparison uses the same static real-market MSFT fixture (251 daily points from yfinance).
@@ -172,7 +185,7 @@ Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches
 - RSI/MACD values are often numerically close between in-house and `pandas_ta` for the same input series.
 <!-- BACKEND_COMPARISON_TUTORIAL:END -->
 
-## 7. Practical notes
+## 8. Practical notes
 
 ### Choosing output format
 

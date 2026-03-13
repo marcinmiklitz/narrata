@@ -20,6 +20,7 @@ Use this skill for OHLCV-to-text workflows.
 ## Public APIs to prefer
 
 - `narrate`
+- `compare`
 - `analyze_summary`, `describe_summary`
 - `analyze_regime`, `describe_regime`
 - `analyze_indicators`, `describe_indicators`
@@ -64,6 +65,9 @@ narrata data.csv --symbolic-method astride
 
 # Disable specific sections
 narrata data.csv --no-patterns --no-support-resistance
+
+# Compare two periods
+narrata compare q1.csv q2.csv --ticker AAPL
 ```
 
 The input must have a datetime index column and OHLC columns (Volume optional, column names case-insensitive). All `narrate()` parameters are exposed as flags — run `narrata --help` for the full list.
@@ -78,6 +82,7 @@ If user wants MCP integration:
   - `uv run --project src/narrata-mcp --no-sync narrata-mcp`
 - Prefer exposed high-level tools:
   - `narrata_narrate_ohlcv`
+  - `narrata_compare_ohlcv`
   - `narrata_summary_ohlcv`
   - `narrata_regime_ohlcv`
   - `narrata_indicators_ohlcv`

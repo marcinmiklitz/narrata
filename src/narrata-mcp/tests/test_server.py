@@ -67,6 +67,7 @@ def test_mcp_lists_expected_tools() -> None:
                 names = {tool.name for tool in tools.tools}
                 assert names == {
                     "narrata_narrate_ohlcv",
+                    "narrata_compare_ohlcv",
                     "narrata_summary_ohlcv",
                     "narrata_regime_ohlcv",
                     "narrata_indicators_ohlcv",
@@ -393,6 +394,101 @@ def test_lowercase_column_names_accepted() -> None:
                 assert data["summary"]["points"] == 120
 
     anyio.run(_run)
+
+
+# ---------------------------------------------------------------------------
+# narrata_compare_ohlcv
+# ---------------------------------------------------------------------------
+
+
+def test_compare_default() -> None:
+    async def _run() -> None:
+        payload = {
+            "points_before": _build_points(120),
+            "points_after": _build_points(120),
+            "ticker": "AAPL",
+        }
+        # Shift the "after" timestamps forward by 120 days
+        start_after = datetime(2025, 5, 1)
+        for idx, p in enumerate(payload["points_after"]):
+            ts = start_after + timedelta(days=idx)
+            p["timestamp"] = ts.isoformat()
+            p["close"] = 120.0 + idx * 0.3  # different trajectory
+
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_compare_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                text = data["text"]
+                assert "AAPL:" in text
+                assert "\u2192" in text
+                assert "Price:" in text
+                assert "Regime:" in text
+
+    anyio.run(_run)
+
+
+def test_compare_with_toggles() -> None:
+    async def _run() -> None:
+        after_points = _build_points(120)
+        start_after = datetime(2025, 5, 1)
+        for idx, p in enumerate(after_points):
+            ts = start_after + timedelta(days=idx)
+            p["timestamp"] = ts.isoformat()
+            p["close"] = 120.0 + idx * 0.3
+
+        payload = {
+            "points_before": _build_points(120),
+            "points_after": after_points,
+            "ticker": "TEST",
+            "include_regime": False,
+            "include_indicators": False,
+            "include_symbolic": False,
+            "include_support_resistance": False,
+        }
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_compare_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                text = data["text"]
+                assert "Price:" in text
+                assert "Regime:" not in text
+                assert "RSI(" not in text
+                assert "Support:" not in text
+
+    anyio.run(_run)
+
+
+def test_compare_json_format() -> None:
+    async def _run() -> None:
+        after_points = _build_points(120)
+        start_after = datetime(2025, 5, 1)
+        for idx, p in enumerate(after_points):
+            ts = start_after + timedelta(days=idx)
+            p["timestamp"] = ts.isoformat()
+
+        payload = {
+            "points_before": _build_points(120),
+            "points_after": after_points,
+            "output_format": "json",
+        }
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_compare_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                inner = json.loads(data["text"])
+                assert "overview" in inner
+                assert "price" in inner
+
+    anyio.run(_run)
+
+
+# ---------------------------------------------------------------------------
+# Edge cases
+# ---------------------------------------------------------------------------
 
 
 def test_no_volume_accepted() -> None:

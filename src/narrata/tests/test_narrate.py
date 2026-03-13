@@ -184,7 +184,7 @@ def test_narrate_precision_zero(sample_ohlcv_df: pd.DataFrame) -> None:
     text = narrate(sample_ohlcv_df, ticker="AAPL", precision=0)
     assert "Range: [" in text
     # No decimal points in the Range line
-    range_line = [l for l in text.splitlines() if l.startswith("Range:")][0]
+    range_line = [line for line in text.splitlines() if line.startswith("Range:")][0]
     assert "." not in range_line
 
 

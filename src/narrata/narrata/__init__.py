@@ -23,6 +23,7 @@ from narrata.analysis.regimes import analyze_regime, describe_regime
 from narrata.analysis.summary import analyze_summary, describe_summary
 from narrata.analysis.support_resistance import describe_support_resistance, find_support_resistance
 from narrata.analysis.symbolic import astride_encode, describe_astride, describe_sax, sax_encode
+from narrata.composition.compare import compare
 from narrata.composition.narrate import narrate
 from narrata.compression.digits import digit_tokenize
 from narrata.exceptions import NarrataError, UnsupportedFormatError, ValidationError
@@ -55,6 +56,7 @@ __all__ = [
     "UnsupportedFormatError",
     "ValidationError",
     "astride_encode",
+    "compare",
     "analyze_indicators",
     "analyze_regime",
     "__version__",
