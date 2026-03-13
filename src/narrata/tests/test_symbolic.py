@@ -100,10 +100,10 @@ def test_astride_rejects_missing_column(sample_ohlcv_df: pd.DataFrame) -> None:
         astride_encode(sample_ohlcv_df, column="NonExistent")
 
 
-def test_astride_rejects_when_ruptures_missing(monkeypatch, sample_ohlcv_df: pd.DataFrame) -> None:
+def test_astride_falls_back_to_sax_when_ruptures_missing(monkeypatch, sample_ohlcv_df: pd.DataFrame) -> None:
     monkeypatch.setattr(symbolic, "rpt", None)
-    with pytest.raises(ValidationError, match="ruptures"):
-        astride_encode(sample_ohlcv_df)
+    stats = astride_encode(sample_ohlcv_df)
+    assert stats.method == "SAX"
 
 
 def test_sax_rejects_insufficient_data() -> None:

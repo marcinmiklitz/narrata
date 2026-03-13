@@ -159,9 +159,8 @@ def astride_encode(
     if alphabet_size < 2 or alphabet_size > 26:
         raise ValidationError("alphabet_size must be between 2 and 26.")
     if rpt is None:
-        raise ValidationError(
-            "ASTRIDE encoding requires the 'ruptures' package. Install with: pip install narrata[symbolic]"
-        )
+        # Fall back to SAX when ruptures is unavailable (e.g. Python 3.14+)
+        return sax_encode(df, column=column, word_size=n_segments, alphabet_size=alphabet_size)
 
     values = pd.to_numeric(df[column], errors="coerce").dropna().to_numpy(dtype=float)
     if values.size < n_segments:

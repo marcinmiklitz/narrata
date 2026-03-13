@@ -53,14 +53,10 @@ def _symbolic_short(
     """Return compact symbolic label."""
     try:
         if method == "astride":
-            try:
-                stats = astride_encode(
-                    df, column=column, n_segments=word_size, alphabet_size=alphabet_size, penalty=penalty
-                )
-                return describe_astride(stats)
-            except ValidationError:
-                # Fall back to SAX when ASTRIDE unavailable (e.g. ruptures missing on 3.14+)
-                pass
+            stats = astride_encode(
+                df, column=column, n_segments=word_size, alphabet_size=alphabet_size, penalty=penalty
+            )
+            return describe_astride(stats) if stats.method == "ASTRIDE" else describe_sax(stats)
         stats = sax_encode(df, column=column, word_size=word_size, alphabet_size=alphabet_size)
         return describe_sax(stats)
     except ValidationError:
