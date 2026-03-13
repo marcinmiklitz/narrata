@@ -7,6 +7,7 @@ import sys
 
 import pandas as pd
 
+from narrata import __version__
 from narrata.composition.narrate import narrate
 
 
@@ -15,6 +16,7 @@ def _build_parser() -> argparse.ArgumentParser:
         prog="narrata",
         description="Generate LLM-ready narration from OHLCV time series data.",
     )
+    p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     p.add_argument(
         "file",
         nargs="?",
