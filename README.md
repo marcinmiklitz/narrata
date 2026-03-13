@@ -51,7 +51,8 @@ df = yf.download("AAPL", period="1y", multi_level_index=False)
 print(narrate(df, ticker="AAPL"))
 ```
 
-Any data source works — yfinance, OpenBB, CSV, database — as long as you have a DataFrame with `Open`, `High`, `Low`, `Close`, `Volume` columns and a `DatetimeIndex`.
+Any data source works — yfinance, OpenBB, CSV, database — as long as you have a DataFrame with OHLC(V) columns and a `DatetimeIndex`.
+Column names are case-insensitive (`close` works as well as `Close`), `Adj Close` is automatically preferred over raw `Close` when both exist, and `Volume` is optional.
 For shorter histories, narrata keeps running and marks sections with `insufficient data` when a specific analysis needs a longer lookback.
 
 Example output:
@@ -210,6 +211,32 @@ Optional extras:
 - `regimes`: `ruptures` (for change-point regime detection)
 - `symbolic`: `tslearn`, `ruptures` (`ruptures` currently supports Python < 3.14)
 - `all`: install all compatible extras for your interpreter
+
+## CLI
+
+narrata includes a command-line tool that reads OHLCV data from CSV files or stdin:
+
+```bash
+# Install with all extras
+pip install "narrata[all]"
+
+# Narrate a local CSV
+narrata prices.csv --ticker AAPL
+
+# Pipe from another tool
+curl -s https://example.com/data.csv | narrata --ticker MSFT
+
+# Choose output format
+narrata prices.csv --ticker AAPL --format markdown_kv
+
+# Disable specific sections
+narrata prices.csv --ticker AAPL --no-patterns --no-support-resistance
+
+# Apply digit-level tokenization
+narrata prices.csv --ticker AAPL --digit-level
+```
+
+The CSV must have a datetime column as its index and OHLC columns (Volume is optional). Column names are case-insensitive. Run `narrata --help` for all options.
 
 ## Agent Integrations
 

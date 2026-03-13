@@ -28,6 +28,7 @@ df = yf.download("AAPL", period="1y", multi_level_index=False)
 print(narrate(df, ticker="AAPL"))
 ```
 
+Column names are case-insensitive (`close` works as well as `Close`), `Adj Close` is preferred over raw `Close` when both exist, and `Volume` is optional.
 For short histories, narrata keeps running and marks sections with `insufficient data` when a component needs a longer lookback.
 
 Example output:
@@ -90,6 +91,21 @@ Patterns: none detected
 Candlestick: Inside Bar on 2026-02-13
 Support: $393.67 (15 touches), $378.77 (8 touches)  Resistance: $510.83 (34 touches), $481.63 (21 touches)
 ```
+
+## CLI
+
+```bash
+# Narrate a CSV file
+narrata prices.csv --ticker AAPL
+
+# Pipe from stdin
+cat prices.csv | narrata --ticker AAPL
+
+# Disable sections, change format
+narrata prices.csv --no-patterns --format markdown_kv
+```
+
+Run `narrata --help` for all options.
 
 ## Digit Splitting for LLM Robustness
 
