@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Literal
 
-OutputFormat = Literal["plain", "markdown_kv", "toon"]
+OutputFormat = Literal["plain", "markdown_kv", "toon", "json"]
 
 
 @dataclass(frozen=True, slots=True)

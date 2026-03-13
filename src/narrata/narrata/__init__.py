@@ -26,7 +26,7 @@ from narrata.analysis.symbolic import astride_encode, describe_astride, describe
 from narrata.composition.narrate import narrate
 from narrata.compression.digits import digit_tokenize
 from narrata.exceptions import NarrataError, UnsupportedFormatError, ValidationError
-from narrata.formatting.serializers import format_sections, to_markdown_kv, to_plain, to_toon
+from narrata.formatting.serializers import format_sections, to_json, to_markdown_kv, to_plain, to_toon
 from narrata.rendering.sparkline import make_sparkline
 from narrata.types import (
     IndicatorStats,
@@ -85,6 +85,7 @@ __all__ = [
     "sax_encode",
     "to_markdown_kv",
     "to_plain",
+    "to_json",
     "to_toon",
     "normalize_columns",
     "validate_ohlcv_frame",

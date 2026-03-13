@@ -1,5 +1,6 @@
 """Serializers for final narration output."""
 
+import json
 from collections.abc import Mapping, Sequence
 
 from toons import dumps
@@ -37,6 +38,15 @@ def to_toon(data: Mapping[str, object]) -> str:
     return str(dumps(dict(data)))
 
 
+def to_json(data: Mapping[str, object]) -> str:
+    """Serialize sections as compact JSON.
+
+    :param data: Mapping of section names to values.
+    :return: JSON string.
+    """
+    return json.dumps(dict(data), ensure_ascii=False)
+
+
 def format_sections(sections: Mapping[str, str], output_format: OutputFormat = "plain") -> str:
     """Format narration sections for the selected output format.
 
@@ -50,4 +60,6 @@ def format_sections(sections: Mapping[str, str], output_format: OutputFormat = "
         return to_markdown_kv(sections)
     if output_format == "toon":
         return to_toon(sections)
+    if output_format == "json":
+        return to_json(sections)
     raise UnsupportedFormatError(f"Unsupported output format: {output_format}")

@@ -18,7 +18,7 @@ from narrata.mcp_api import (
 )
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
-OutputFormat = Literal["plain", "markdown_kv", "toon"]
+OutputFormat = Literal["plain", "markdown_kv", "toon", "json"]
 
 mcp = FastMCP("narrata_mcp")
 

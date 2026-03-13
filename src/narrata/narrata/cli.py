@@ -34,7 +34,7 @@ def _build_parser() -> argparse.ArgumentParser:
     p.add_argument(
         "--format",
         dest="output_format",
-        choices=["plain", "markdown_kv", "toon"],
+        choices=["plain", "markdown_kv", "toon", "json"],
         default="plain",
         help="Output format (default: plain).",
     )
