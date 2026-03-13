@@ -63,11 +63,11 @@ Representative output shape:
 
 ```text
 MSFT (251 pts, daily): ▂▁▁▁▃▄▅▇▇█▇███▇▆▅▆
-Range: [$354.56, $542.07]  Mean: $466.98  Std: $49.62
-Start: $408.43  End: $401.32  Change: -1.74%
+Range: [354.56, 542.07]  Mean: 466.98  Std: 49.62
+Start: 408.43  End: 401.32  Change: -1.74%
 Regime: Ranging since 2025-02-18 (low volatility)
 RSI(14): 32.4 (neutral-bearish)  MACD: bearish crossover 11 days ago
-Support: $393.67 (15 touches), $378.77 (8 touches)  Resistance: $510.83 (34 touches), $481.63 (21 touches)
+Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches), 481.63 (21 touches)
 ```
 
 ## Practical guidance

@@ -67,7 +67,7 @@ def find_support_resistance(
     return LevelStats(supports=supports, resistances=resistances)
 
 
-def describe_support_resistance(stats: LevelStats, currency_symbol: str = "$", precision: int = 2) -> str:
+def describe_support_resistance(stats: LevelStats, currency_symbol: str = "", precision: int = 2) -> str:
     """Render support and resistance levels as one line.
 
     :param stats: Support and resistance stats.

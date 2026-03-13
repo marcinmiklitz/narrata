@@ -36,6 +36,7 @@ def _build_parser() -> argparse.ArgumentParser:
         default="plain",
         help="Output format (default: plain).",
     )
+    p.add_argument("--currency", default="", help="Currency symbol for price values (e.g. '$', '£').")
     p.add_argument("--digit-level", action="store_true", help="Apply digit-level tokenization.")
     p.add_argument("--sparkline-width", type=int, default=20, help="Sparkline width (default: 20).")
     p.add_argument("--sax-word-size", type=int, default=16, help="SAX word size (default: 16).")
@@ -105,6 +106,7 @@ def main(argv: list[str] | None = None) -> None:
         symbolic_word_size=args.sax_word_size,
         symbolic_alphabet_size=args.sax_alphabet_size,
         digit_level=args.digit_level,
+        currency_symbol=args.currency,
         output_format=args.output_format,  # type: ignore[arg-type]
     )
     print(text)

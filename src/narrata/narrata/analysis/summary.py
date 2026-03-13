@@ -52,7 +52,7 @@ def analyze_summary(df: pd.DataFrame, column: str = "Close", ticker: str | None 
 
 
 def describe_summary(
-    summary: SummaryStats, currency_symbol: str = "$", precision: int = 2, include_header: bool = True
+    summary: SummaryStats, currency_symbol: str = "", precision: int = 2, include_header: bool = True
 ) -> str:
     """Render summary statistics as text.
 

@@ -101,6 +101,7 @@ def narrate_from_records(
     symbolic_word_size: int = 16,
     symbolic_alphabet_size: int = 8,
     digit_level: bool = False,
+    currency_symbol: str = "",
     output_format: str = "plain",
 ) -> str:
     """Generate the full narrata text from OHLCV records.
@@ -122,6 +123,7 @@ def narrate_from_records(
     :param symbolic_word_size: SAX word size.
     :param symbolic_alphabet_size: SAX alphabet size.
     :param digit_level: Enable digit tokenization in final output.
+    :param currency_symbol: Symbol prepended to price values.
     :param output_format: Output format (plain, markdown_kv, toon).
     :return: Full narrata output text.
     """
@@ -146,6 +148,7 @@ def narrate_from_records(
         symbolic_word_size=symbolic_word_size,
         symbolic_alphabet_size=symbolic_alphabet_size,
         digit_level=digit_level,
+        currency_symbol=currency_symbol,
         output_format=output_format,  # type: ignore[arg-type]
     )
 

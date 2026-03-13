@@ -36,8 +36,8 @@ Example output:
 ```text
 AAPL (251 pts, daily): ▅▄▃▁▂▁▁▂▂▂▄▄▆▇▇██▆▆▆
 Date range: 2025-02-14 to 2026-02-13
-Range: [$171.67, $285.92]  Mean: $235.06  Std: $28.36
-Start: $243.54  End: $255.78  Change: +5.03%
+Range: [171.67, 285.92]  Mean: 235.06  Std: 28.36
+Start: 243.54  End: 255.78  Change: +5.03%
 Regime: Uptrend since 2025-05-07 (low volatility)
 RSI(14): 39.6 (neutral-bearish)  MACD: bearish crossover 0 days ago
 BB: lower half
@@ -47,7 +47,7 @@ Volatility: 84th percentile (high)
 SAX(16): ecabbabbdegghhhg
 Patterns: none detected
 Candlestick: Inside Bar on 2026-02-10
-Support: $201.77 (26 touches), $208.38 (23 touches)  Resistance: $270.88 (24 touches), $257.57 (22 touches)
+Support: 201.77 (26 touches), 208.38 (23 touches)  Resistance: 270.88 (24 touches), 257.57 (22 touches)
 ```
 
 ## Fallback vs extras (same input)
@@ -59,8 +59,8 @@ Fallback-only (`pip install narrata`):
 ```text
 MSFT (251 pts, daily): ▂▁▁▁▃▄▅▇▇█▇███▇▆▅▆▆▂
 Date range: 2025-02-14 to 2026-02-13
-Range: [$354.56, $542.07]  Mean: $466.98  Std: $49.62
-Start: $408.43  End: $401.32  Change: -1.74%
+Range: [354.56, 542.07]  Mean: 466.98  Std: 49.62
+Start: 408.43  End: 401.32  Change: -1.74%
 Regime: Downtrend since 2026-01-29 (high volatility)
 RSI(14): 32.4 (neutral-bearish)  MACD: bearish crossover 11 days ago
 BB: lower half
@@ -70,7 +70,7 @@ Volatility: 94th percentile (extremely high)
 SAX(16): aaabdfggggggffdb
 Patterns: none detected
 Candlestick: Inside Bar on 2026-02-13
-Support: $393.67 (15 touches), $378.77 (8 touches)  Resistance: $510.83 (34 touches), $481.63 (21 touches)
+Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches), 481.63 (21 touches)
 ```
 
 With extras (`pip install "narrata[all]"`):
@@ -78,8 +78,8 @@ With extras (`pip install "narrata[all]"`):
 ```text
 MSFT (251 pts, daily): ▂▁▁▁▃▄▅▇▇█▇███▇▆▅▆▆▂
 Date range: 2025-02-14 to 2026-02-13
-Range: [$354.56, $542.07]  Mean: $466.98  Std: $49.62
-Start: $408.43  End: $401.32  Change: -1.74%
+Range: [354.56, 542.07]  Mean: 466.98  Std: 49.62
+Start: 408.43  End: 401.32  Change: -1.74%
 Regime: Ranging since 2025-02-18 (low volatility)
 RSI(14): 32.4 (neutral-bearish)  MACD: bearish crossover 11 days ago
 BB: lower half
@@ -89,7 +89,7 @@ Volatility: 94th percentile (extremely high)
 SAX(16): aaabdefggggggfed
 Patterns: none detected
 Candlestick: Inside Bar on 2026-02-13
-Support: $393.67 (15 touches), $378.77 (8 touches)  Resistance: $510.83 (34 touches), $481.63 (21 touches)
+Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches), 481.63 (21 touches)
 ```
 
 ## CLI

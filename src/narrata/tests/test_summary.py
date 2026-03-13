@@ -37,7 +37,7 @@ def test_describe_summary_formats_compact_text(sample_ohlcv_df: pd.DataFrame) ->
     stats = analyze_summary(sample_ohlcv_df)
     text = describe_summary(stats)
     assert f"AAPL ({len(sample_ohlcv_df)} pts, daily)" in text
-    assert "Range: [$" in text
+    assert "Range: [" in text
     assert "Change:" in text
 
 
