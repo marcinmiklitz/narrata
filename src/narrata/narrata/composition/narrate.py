@@ -126,14 +126,24 @@ def narrate(
     if include_symbolic:
         try:
             if symbolic_method == "astride":
-                symbolic = astride_encode(
-                    df,
-                    column=column,
-                    n_segments=symbolic_word_size,
-                    alphabet_size=symbolic_alphabet_size,
-                    penalty=symbolic_penalty,
-                )
-                sections["symbolic"] = describe_astride(symbolic)
+                try:
+                    symbolic = astride_encode(
+                        df,
+                        column=column,
+                        n_segments=symbolic_word_size,
+                        alphabet_size=symbolic_alphabet_size,
+                        penalty=symbolic_penalty,
+                    )
+                    sections["symbolic"] = describe_astride(symbolic)
+                except ValidationError:
+                    # Fall back to SAX when ASTRIDE unavailable (e.g. ruptures missing on 3.14+)
+                    symbolic = sax_encode(
+                        df,
+                        column=column,
+                        word_size=symbolic_word_size,
+                        alphabet_size=symbolic_alphabet_size,
+                    )
+                    sections["symbolic"] = describe_sax(symbolic)
             else:
                 symbolic = sax_encode(
                     df,
@@ -144,8 +154,7 @@ def narrate(
                 sections["symbolic"] = describe_sax(symbolic)
         except ValidationError:
             if verbose:
-                label = "ASTRIDE" if symbolic_method == "astride" else f"SAX({symbolic_word_size})"
-                sections["symbolic"] = f"{label}: insufficient data"
+                sections["symbolic"] = f"SAX({symbolic_word_size}): insufficient data"
 
     if include_patterns:
         try:

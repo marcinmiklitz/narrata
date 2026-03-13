@@ -6,6 +6,11 @@ import narrata.analysis.symbolic as symbolic
 from narrata.analysis.symbolic import astride_encode, describe_astride, describe_sax, sax_encode
 from narrata.exceptions import ValidationError
 
+requires_ruptures = pytest.mark.skipif(
+    __import__("importlib").util.find_spec("ruptures") is None,
+    reason="ruptures not installed (unavailable on Python 3.14+)",
+)
+
 
 def test_sax_encode_returns_symbolic_stats(sample_ohlcv_df: pd.DataFrame) -> None:
     stats = sax_encode(sample_ohlcv_df, word_size=16, alphabet_size=8)
@@ -65,6 +70,7 @@ def test_sax_rejects_missing_column(sample_ohlcv_df: pd.DataFrame) -> None:
         sax_encode(sample_ohlcv_df, column="NonExistent")
 
 
+@requires_ruptures
 def test_astride_encode_returns_symbolic_stats(sample_ohlcv_df: pd.DataFrame) -> None:
     stats = astride_encode(sample_ohlcv_df, n_segments=8, alphabet_size=4)
     assert stats.method == "ASTRIDE"
@@ -72,6 +78,7 @@ def test_astride_encode_returns_symbolic_stats(sample_ohlcv_df: pd.DataFrame) ->
     assert set(stats.symbols).issubset(set("abcdefghijklmnopqrstuvwxyz"))
 
 
+@requires_ruptures
 def test_describe_astride_format(sample_ohlcv_df: pd.DataFrame) -> None:
     stats = astride_encode(sample_ohlcv_df, n_segments=8, alphabet_size=4)
     text = describe_astride(stats)
@@ -106,6 +113,7 @@ def test_sax_rejects_insufficient_data() -> None:
         sax_encode(df, word_size=16)
 
 
+@requires_ruptures
 def test_astride_rejects_insufficient_data() -> None:
     index = pd.date_range("2025-01-01", periods=5, freq="D")
     df = pd.DataFrame({"Close": [100.0, 101.0, 102.0, 103.0, 104.0]}, index=index)

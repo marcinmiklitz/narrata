@@ -123,6 +123,10 @@ def test_sax_from_records(sample_ohlcv_df: pd.DataFrame) -> None:
     assert "SAX(" in payload["text"]
 
 
+@pytest.mark.skipif(
+    __import__("importlib").util.find_spec("ruptures") is None,
+    reason="ruptures not installed (unavailable on Python 3.14+)",
+)
 def test_astride_from_records(sample_ohlcv_df: pd.DataFrame) -> None:
     records = _records_from_frame(sample_ohlcv_df)
     payload = astride_from_records(records)
