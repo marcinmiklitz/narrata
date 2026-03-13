@@ -169,3 +169,31 @@ def test_narrate_one_month_series_does_not_raise_and_marks_indicators_insufficie
     text = narrate(frame, ticker="AAPL")
     assert "AAPL (22 pts, business-daily):" in text
     assert "Indicators: insufficient data" in text
+
+
+def test_narrate_json_output(sample_ohlcv_df: pd.DataFrame) -> None:
+    import json
+
+    text = narrate(sample_ohlcv_df, ticker="AAPL", output_format="json")
+    data = json.loads(text)
+    assert "overview" in data
+    assert "AAPL" in data["overview"]
+
+
+def test_narrate_precision_zero(sample_ohlcv_df: pd.DataFrame) -> None:
+    text = narrate(sample_ohlcv_df, ticker="AAPL", precision=0)
+    assert "Range: [" in text
+    # No decimal points in the Range line
+    range_line = [l for l in text.splitlines() if l.startswith("Range:")][0]
+    assert "." not in range_line
+
+
+def test_narrate_currency_symbol(sample_ohlcv_df: pd.DataFrame) -> None:
+    text = narrate(sample_ohlcv_df, ticker="AAPL", currency_symbol="£")
+    assert "£" in text
+
+
+def test_narrate_astride_method(sample_ohlcv_df: pd.DataFrame) -> None:
+    text = narrate(sample_ohlcv_df, symbolic_method="astride")
+    assert "ASTRIDE(" in text
+    assert "SAX(" not in text
