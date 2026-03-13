@@ -38,7 +38,7 @@ from narrata.types import (
     SummaryStats,
     SymbolicStats,
 )
-from narrata.validation.ohlcv import infer_frequency_label, validate_ohlcv_frame
+from narrata.validation.ohlcv import infer_frequency_label, normalize_columns, validate_ohlcv_frame
 
 __version__ = version("narrata")
 
@@ -86,5 +86,6 @@ __all__ = [
     "to_markdown_kv",
     "to_plain",
     "to_toon",
+    "normalize_columns",
     "validate_ohlcv_frame",
 ]

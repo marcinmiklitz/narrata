@@ -13,7 +13,7 @@ from narrata.exceptions import ValidationError
 from narrata.formatting.serializers import format_sections
 from narrata.rendering.sparkline import make_sparkline
 from narrata.types import OutputFormat
-from narrata.validation.ohlcv import validate_ohlcv_frame
+from narrata.validation.ohlcv import normalize_columns, validate_ohlcv_frame
 
 
 def narrate(
@@ -53,6 +53,7 @@ def narrate(
     :param output_format: Output format.
     :return: Composed narration text.
     """
+    df = normalize_columns(df)
     validate_ohlcv_frame(df)
 
     if column not in df.columns:

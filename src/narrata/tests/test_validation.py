@@ -2,7 +2,7 @@ import pandas as pd
 import pytest
 
 from narrata.exceptions import ValidationError
-from narrata.validation.ohlcv import infer_frequency_label, validate_ohlcv_frame
+from narrata.validation.ohlcv import infer_frequency_label, normalize_columns, validate_ohlcv_frame
 
 
 def test_validate_ohlcv_frame_accepts_valid_input(sample_ohlcv_df: pd.DataFrame) -> None:
@@ -65,3 +65,47 @@ def test_infer_frequency_label_weekly() -> None:
 def test_infer_frequency_label_irregular_for_short_index() -> None:
     index = pd.DatetimeIndex([pd.Timestamp("2025-01-01")])
     assert infer_frequency_label(index) == "irregular"
+
+
+def test_normalize_columns_lowercased(sample_ohlcv_df: pd.DataFrame) -> None:
+    lower = sample_ohlcv_df.rename(columns=str.lower)
+    result = normalize_columns(lower)
+    assert list(result.columns) == ["Open", "High", "Low", "Close", "Volume"]
+
+
+def test_normalize_columns_adj_close_replaces_close(sample_ohlcv_df: pd.DataFrame) -> None:
+    df = sample_ohlcv_df.copy()
+    df["Adj Close"] = df["Close"] * 0.98
+    result = normalize_columns(df)
+    assert "Adj Close" not in result.columns
+    assert "Close" in result.columns
+    # Adj Close values should have won
+    assert result["Close"].iloc[0] == pytest.approx(sample_ohlcv_df["Close"].iloc[0] * 0.98)
+
+
+def test_normalize_columns_adj_close_only_no_raw_close(sample_ohlcv_df: pd.DataFrame) -> None:
+    df = sample_ohlcv_df.drop(columns=["Close"])
+    df["adj_close"] = sample_ohlcv_df["Close"]
+    result = normalize_columns(df)
+    assert "Close" in result.columns
+
+
+def test_validate_accepts_without_volume(sample_ohlcv_df: pd.DataFrame) -> None:
+    no_vol = sample_ohlcv_df.drop(columns=["Volume"])
+    validate_ohlcv_frame(no_vol)
+
+
+def test_narrate_works_without_volume(sample_ohlcv_df: pd.DataFrame) -> None:
+    from narrata.composition.narrate import narrate
+
+    no_vol = sample_ohlcv_df.drop(columns=["Volume"])
+    text = narrate(no_vol, ticker="TEST")
+    assert "TEST" in text
+
+
+def test_narrate_works_with_lowercase_columns(sample_ohlcv_df: pd.DataFrame) -> None:
+    from narrata.composition.narrate import narrate
+
+    lower = sample_ohlcv_df.rename(columns=str.lower)
+    text = narrate(lower, ticker="TEST")
+    assert "TEST" in text

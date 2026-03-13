@@ -7,6 +7,18 @@ import pandas as pd
 from narrata.exceptions import ValidationError
 
 REQUIRED_OHLCV_COLUMNS: tuple[str, ...] = ("Open", "High", "Low", "Close", "Volume")
+REQUIRED_OHLC_COLUMNS: tuple[str, ...] = ("Open", "High", "Low", "Close")
+
+# Lowercase lookup → canonical name.  "adj close" variants map to Close and
+# take priority over a raw "close" column when both exist.
+_CANONICAL: dict[str, str] = {
+    "open": "Open",
+    "high": "High",
+    "low": "Low",
+    "close": "Close",
+    "volume": "Volume",
+}
+_ADJ_CLOSE_VARIANTS: set[str] = {"adj close", "adj_close", "adjusted close"}
 
 _FREQUENCY_LABELS = {
     "B": "business-daily",
@@ -26,11 +38,50 @@ _FREQUENCY_LABELS = {
 _VALIDATED_ATTR = "_narrata_validated"
 
 
-def validate_ohlcv_frame(df: pd.DataFrame, required_columns: Sequence[str] = REQUIRED_OHLCV_COLUMNS) -> None:
+def normalize_columns(df: pd.DataFrame) -> pd.DataFrame:
+    """Rename columns to canonical OHLCV names in-place where possible.
+
+    * Case-insensitive: ``open`` → ``Open``, ``volume`` → ``Volume``, etc.
+    * ``Adj Close`` / ``Adj_Close`` / ``Adjusted Close`` → ``Close``
+      (takes priority over a raw ``close`` column when both exist).
+    * Unrecognized columns are left untouched.
+
+    :param df: Input DataFrame (modified in-place via ``rename``).
+    :return: The same DataFrame with canonical column names.
+    """
+    rename_map: dict[str, str] = {}
+    has_adj_close = False
+
+    for col in df.columns:
+        lower = col.lower().strip()
+        if lower in _ADJ_CLOSE_VARIANTS:
+            rename_map[col] = "Close"
+            has_adj_close = True
+        elif lower in _CANONICAL:
+            rename_map[col] = _CANONICAL[lower]
+
+    # If adj close exists alongside a raw close, drop the raw close first.
+    if has_adj_close:
+        raw_close_cols = [
+            c for c, target in rename_map.items() if target == "Close" and c.lower().strip() not in _ADJ_CLOSE_VARIANTS
+        ]
+        if raw_close_cols:
+            df = df.drop(columns=raw_close_cols)
+            for col in raw_close_cols:
+                del rename_map[col]
+
+    df = df.rename(columns=rename_map)
+    return df
+
+
+def validate_ohlcv_frame(df: pd.DataFrame, required_columns: Sequence[str] = REQUIRED_OHLC_COLUMNS) -> None:
     """Validate basic OHLCV and index contracts expected by narrata.
 
+    Columns are normalized first (case-insensitive, adj-close handling).
+    Only OHLC columns are required; Volume is optional.
+
     :param df: Input DataFrame to validate.
-    :param required_columns: Required OHLCV columns.
+    :param required_columns: Required columns (default: OHLC only).
     :return: ``None`` if validation passes.
     """
     if isinstance(df, pd.DataFrame) and df.attrs.get(_VALIDATED_ATTR):
