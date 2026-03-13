@@ -21,6 +21,7 @@ def narrate(
     *,
     column: str = "Close",
     ticker: str | None = None,
+    frequency: str | None = None,
     include_summary: bool = True,
     include_sparkline: bool = True,
     include_regime: bool = True,
@@ -43,6 +44,8 @@ def narrate(
     :param df: OHLCV DataFrame.
     :param column: Price column used across modules.
     :param ticker: Optional ticker override.
+    :param frequency: Explicit frequency label (e.g. ``"15min"``, ``"daily"``).
+        When ``None``, frequency is auto-detected from the index.
     :param include_summary: Include summary lines.
     :param include_sparkline: Include sparkline in overview line.
     :param include_regime: Include regime classification line.
@@ -81,7 +84,7 @@ def narrate(
         raise ValidationError("At least one narration component must be enabled.")
 
     sections: dict[str, str] = {}
-    summary = analyze_summary(df, column=column, ticker=ticker)
+    summary = analyze_summary(df, column=column, ticker=ticker, frequency=frequency)
 
     if include_summary or include_sparkline:
         entity_name = summary.ticker or summary.column
@@ -110,7 +113,9 @@ def narrate(
 
     if include_indicators:
         try:
-            sections["indicators"] = describe_indicators(analyze_indicators(df, column=column))
+            sections["indicators"] = describe_indicators(
+                analyze_indicators(df, column=column, frequency=summary.frequency)
+            )
         except ValidationError:
             sections["indicators"] = "Indicators: insufficient data"
 

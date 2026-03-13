@@ -121,6 +121,10 @@ narrata prices.csv --format json
 # Precision and ASTRIDE encoding
 narrata prices.csv --precision 0 --symbolic-method astride
 
+# Intraday data (frequency auto-detected, or explicit for patchy data)
+narrata intraday_15m.csv --ticker AAPL --currency '$'
+narrata intraday_15m.csv --ticker AAPL --frequency 15min
+
 # Compare two periods
 narrata compare q1.csv q2.csv --ticker AAPL
 ```
@@ -141,11 +145,18 @@ print(digit_tokenize("Price 171.24, move +3.2%"))
 # Price 1 7 1 . 2 4 , move + 3 . 2 %
 ```
 
+## Intraday awareness
+
+narrata auto-detects sub-daily frequencies (`1min`, `5min`, `15min`, `30min`, `hourly`) and scales indicator parameters so lookback windows cover the same calendar-time horizons as daily mode. For example, on 15-minute bars SMA crossover uses 10/40 instead of 50/200, and volume lookback uses 26 bars (~1 trading day) instead of 20 days. Output labels adapt automatically (`"SMA 10/40"`, `"26-bar avg"`).
+
+For patchy or unevenly-spaced data, pass the frequency explicitly: `narrate(df, frequency="15min")` or `--frequency 15min` on the CLI. Use `"irregular"` for data with no fixed interval — units display as "bars" instead of "days".
+
 ## Features
 
 - Input validation for OHLCV DataFrames
 - Summary analysis with date range context
 - Regime classification (`Uptrend` / `Downtrend` / `Ranging`)
+- **Intraday-aware indicators** — auto-scaled defaults for sub-daily bars
 - RSI and MACD interpretation
 - Bollinger Band and moving average crossover descriptions
 - Volatility and volume context

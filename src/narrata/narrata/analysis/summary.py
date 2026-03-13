@@ -6,18 +6,28 @@ import pandas as pd
 
 from narrata.exceptions import ValidationError
 from narrata.types import SummaryStats
-from narrata.validation.ohlcv import infer_frequency_label, validate_ohlcv_frame
+from narrata.validation.ohlcv import VALID_FREQUENCIES, infer_frequency_label, validate_ohlcv_frame
 
 
-def analyze_summary(df: pd.DataFrame, column: str = "Close", ticker: str | None = None) -> SummaryStats:
+def analyze_summary(
+    df: pd.DataFrame,
+    column: str = "Close",
+    ticker: str | None = None,
+    frequency: str | None = None,
+) -> SummaryStats:
     """Compute summary statistics for a selected numeric column.
 
     :param df: OHLCV DataFrame.
     :param column: Numeric column to summarize.
     :param ticker: Optional ticker override.
+    :param frequency: Explicit frequency label (e.g. ``"15min"``, ``"daily"``).
+        When ``None``, frequency is auto-detected from the index.
     :return: Structured summary statistics.
     """
     validate_ohlcv_frame(df)
+
+    if frequency is not None and frequency not in VALID_FREQUENCIES:
+        raise ValidationError(f"Unknown frequency '{frequency}'. Valid values: {', '.join(sorted(VALID_FREQUENCIES))}.")
 
     if column not in df.columns:
         raise ValidationError(f"Column '{column}' does not exist in DataFrame.")
@@ -38,7 +48,7 @@ def analyze_summary(df: pd.DataFrame, column: str = "Close", ticker: str | None 
         ticker=_resolve_ticker(df, ticker),
         column=column,
         points=int(series.size),
-        frequency=infer_frequency_label(df.index),
+        frequency=frequency or infer_frequency_label(df.index),
         start_date=df.index[0].date(),
         end_date=df.index[-1].date(),
         start=start,

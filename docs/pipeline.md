@@ -70,6 +70,31 @@ RSI(14): 32.4 (neutral-bearish)  MACD: bearish crossover 11 days ago
 Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches), 481.63 (21 touches)
 ```
 
+## Intraday data
+
+`narrate(...)` auto-detects sub-daily frequencies and scales indicator parameters (SMA crossover, volume lookback, volatility lookback) so that lookback windows cover the same calendar-time horizons as daily mode. For patchy or unevenly-spaced data, pass `frequency` explicitly:
+
+```python
+# Auto-detected:
+text = narrate(df_15m, ticker="AAPL")
+
+# Explicit (for patchy data):
+text = narrate(df_15m, ticker="AAPL", frequency="15min")
+```
+
+When using the composed path with intraday data, pass the detected frequency explicitly:
+
+```python
+summary = analyze_summary(df_15m, ticker="AAPL")
+indicators = analyze_indicators(df_15m, frequency=summary.frequency)
+
+# Or override directly:
+indicators = analyze_indicators(df_15m, frequency="15min")
+
+# For unstructured data with no fixed interval:
+text = narrate(df, frequency="irregular")  # uses "bar" units
+```
+
 ## Practical guidance
 
 - Use `narrate(...)` for default usage in agents and apps.

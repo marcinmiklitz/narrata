@@ -272,6 +272,10 @@ narrata prices.csv --ticker AAPL --symbolic-method astride
 # Disable specific sections
 narrata prices.csv --ticker AAPL --no-patterns --no-support-resistance
 
+# Intraday data (frequency auto-detected, or set explicitly for patchy data)
+narrata intraday_15m.csv --ticker AAPL --currency '$'
+narrata intraday_15m.csv --ticker AAPL --frequency 15min
+
 # Compare two periods side-by-side
 narrata compare q1.csv q2.csv --ticker AAPL
 ```
@@ -322,11 +326,43 @@ Add to your `claude_desktop_config.json`:
 
 </details>
 
+## Intraday awareness
+
+narrata auto-detects sub-daily frequencies (`1min`, `5min`, `15min`, `30min`, `hourly`) and scales indicator defaults so that lookback windows cover the same calendar-time horizons as daily mode. For patchy or unevenly-spaced data where auto-detection may fail, pass the frequency explicitly via `frequency="15min"` in the Python API, `--frequency 15min` on the CLI, or the `frequency` field in MCP tools. Use `frequency="irregular"` for fully unstructured data with no fixed interval — this keeps daily-scale indicator defaults but labels units as "bars" instead of "days".
+
+| Parameter | Daily | 15min | 5min |
+|---|---|---|---|
+| SMA crossover | 50 / 200 | 10 / 40 | 30 / 120 |
+| Volume lookback | 20 days | 26 bars (~1 day) | 78 bars (~1 day) |
+| Volatility lookback | 252 bars (~1 year) | 520 bars (~20 days) | 1560 bars (~20 days) |
+
+RSI(14), MACD(12/26/9), and Bollinger(20) keep their standard defaults — practitioners use these across timeframes.
+
+Output labels adapt automatically:
+
+```text
+AAPL (130 pts, 15min): ▂▅▄▄▃▃▂▁▆▃▃▃▇▆▇█▇▇█▆
+Date range: 2025-11-06 to 2025-11-12
+Range: [$268.73, $275.55]  Mean: $271.67  Std: $2.34
+Start: $268.73  End: $273.47  Change: +1.76%
+Regime: Ranging since 2025-11-06 (low volatility)
+RSI(14): 42.5 (neutral-bearish)  MACD: bearish crossover 6 days ago
+BB: below lower band (squeeze)
+SMA 10/40: golden cross 60 bars ago
+Volume: 2.89x 26-bar avg (unusually high)
+Volatility: 2nd percentile (extremely low)
+SAX(16): dddcbacbbcfghghh
+Patterns: Ascending triangle forming since 2025-11-10
+Candlestick: Doji on 2025-11-12
+Support: $272.02 (89 touches), $268.40 (52 touches)  Resistance: $274.96 (56 touches)
+```
+
 ## Features
 
 - Input validation for OHLCV DataFrames
 - Summary analysis with date range context
 - Regime classification (`Uptrend` / `Downtrend` / `Ranging`)
+- **Intraday-aware indicators** — auto-scaled SMA, volume, and volatility defaults for sub-daily bars
 - RSI and MACD interpretation (uses `pandas_ta` indicator lines when available)
 - Volume analysis (ratio to moving average)
 - Bollinger Band position and squeeze detection

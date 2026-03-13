@@ -33,6 +33,11 @@ def _build_narrate_parser() -> argparse.ArgumentParser:
     p.add_argument("--ticker", default=None, help="Ticker symbol for the header line.")
     p.add_argument("--column", default="Close", help="Price column to analyze (default: Close).")
     p.add_argument(
+        "--frequency",
+        default=None,
+        help="Explicit frequency label (e.g. 15min, 5min, hourly, daily). Auto-detected when omitted.",
+    )
+    p.add_argument(
         "--format",
         dest="output_format",
         choices=["plain", "markdown_kv", "toon", "json"],
@@ -74,6 +79,11 @@ def _build_compare_parser() -> argparse.ArgumentParser:
     )
     p.add_argument("--ticker", default=None, help="Ticker symbol for the header line.")
     p.add_argument("--column", default="Close", help="Price column to analyze (default: Close).")
+    p.add_argument(
+        "--frequency",
+        default=None,
+        help="Explicit frequency label (e.g. 15min, 5min, hourly, daily). Auto-detected when omitted.",
+    )
     p.add_argument(
         "--format",
         dest="output_format",
@@ -143,6 +153,7 @@ def _run_compare(argv: list[str]) -> None:
         df_after,
         column=args.column,
         ticker=args.ticker,
+        frequency=args.frequency,
         currency_symbol=args.currency,
         precision=args.precision,
         include_regime=not args.no_regime,
@@ -167,6 +178,7 @@ def _run_narrate(argv: list[str] | None) -> None:
         df,
         column=args.column,
         ticker=args.ticker,
+        frequency=args.frequency,
         include_summary=not args.no_summary,
         include_sparkline=not args.no_sparkline,
         include_regime=not args.no_regime,

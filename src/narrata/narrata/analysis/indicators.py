@@ -9,6 +9,7 @@ import pandas as pd
 from narrata.exceptions import ValidationError
 from narrata.types import IndicatorStats
 from narrata.validation import validate_ohlcv_frame
+from narrata.validation.ohlcv import BAR_UNIT_FREQUENCIES, is_intraday
 
 ta: Any | None
 try:
@@ -222,17 +223,65 @@ def compute_volatility_percentile(series: pd.Series, window: int = 20, lookback:
     return percentile, state
 
 
-def analyze_indicators(df: pd.DataFrame, column: str = "Close", rsi_period: int = 14) -> IndicatorStats:
+# Approximate bars per trading day for each intraday frequency.
+_BARS_PER_DAY: dict[str, int] = {
+    "1min": 390,
+    "5min": 78,
+    "15min": 26,
+    "30min": 13,
+    "hourly": 7,
+    "minutely": 390,
+}
+
+
+def _intraday_defaults(frequency: str) -> dict[str, int]:
+    """Return frequency-scaled indicator defaults.
+
+    For daily+ data, returns standard defaults.  For intraday, scales
+    SMA crossover, volume lookback, and volatility lookback to cover
+    roughly the same calendar-time horizon as the daily defaults.
+    """
+    if not is_intraday(frequency):
+        return {
+            "ma_fast": 50,
+            "ma_slow": 200,
+            "bb_period": 20,
+            "volume_lookback": 20,
+            "vol_window": 20,
+            "vol_lookback": 252,
+        }
+
+    bpd = _BARS_PER_DAY.get(frequency, 26)
+    return {
+        "ma_fast": max(10, 10 * bpd // 26),  # ~10 sessions
+        "ma_slow": max(40, 40 * bpd // 26),  # ~40 sessions
+        "bb_period": 20,  # keep 20-bar BB
+        "volume_lookback": max(20, bpd),  # ~1 trading day
+        "vol_window": 20,  # keep 20-bar window
+        "vol_lookback": max(252, 20 * bpd),  # ~20 trading days
+    }
+
+
+def analyze_indicators(
+    df: pd.DataFrame, column: str = "Close", rsi_period: int = 14, frequency: str = "daily"
+) -> IndicatorStats:
     """Analyze RSI, MACD, Bollinger Bands, MA crossovers, volume, and volatility.
+
+    When *frequency* indicates intraday data, indicator parameters are
+    automatically scaled so that lookback windows cover roughly the same
+    calendar-time horizons as the daily defaults.
 
     :param df: OHLCV DataFrame.
     :param column: Price column to analyze.
     :param rsi_period: RSI period.
+    :param frequency: Frequency label (e.g. ``"daily"``, ``"15min"``).
     :return: Structured indicator statistics.
     """
     validate_ohlcv_frame(df)
     if column not in df.columns:
         raise ValidationError(f"Column '{column}' does not exist in DataFrame.")
+
+    defaults = _intraday_defaults(frequency)
 
     values = pd.to_numeric(df[column], errors="coerce").dropna()
     if ta is None:
@@ -247,29 +296,35 @@ def analyze_indicators(df: pd.DataFrame, column: str = "Close", rsi_period: int 
 
     bb_position: str | None = None
     bb_squeeze: bool | None = None
+    bb_period = defaults["bb_period"]
     try:
-        bb_position, bb_squeeze = compute_bollinger(values)
+        bb_position, bb_squeeze = compute_bollinger(values, period=bb_period)
     except ValidationError:
         pass
 
+    ma_fast = defaults["ma_fast"]
+    ma_slow = defaults["ma_slow"]
     ma_cross: str | None = None
     ma_cross_days: int | None = None
     try:
-        ma_cross, ma_cross_days = compute_ma_crossover(values)
+        ma_cross, ma_cross_days = compute_ma_crossover(values, fast_period=ma_fast, slow_period=ma_slow)
     except ValidationError:
         pass
 
+    vol_lookback = defaults["volume_lookback"]
     volume_ratio: float | None = None
     volume_state: str | None = None
     try:
-        volume_ratio, volume_state = compute_volume_state(df)
+        volume_ratio, volume_state = compute_volume_state(df, lookback=vol_lookback)
     except ValidationError:
         pass
 
+    vol_window = defaults["vol_window"]
+    vol_lb = defaults["vol_lookback"]
     vol_pct: float | None = None
     vol_state: str | None = None
     try:
-        vol_pct, vol_state = compute_volatility_percentile(values)
+        vol_pct, vol_state = compute_volatility_percentile(values, window=vol_window, lookback=vol_lb)
     except ValidationError:
         pass
 
@@ -284,12 +339,19 @@ def analyze_indicators(df: pd.DataFrame, column: str = "Close", rsi_period: int 
         crossover_days_ago=crossover_days,
         bb_position=bb_position,
         bb_squeeze=bb_squeeze,
+        bb_period=bb_period,
         ma_cross=ma_cross,
         ma_cross_days_ago=ma_cross_days,
+        ma_fast_period=ma_fast,
+        ma_slow_period=ma_slow,
         volume_ratio=volume_ratio,
         volume_state=volume_state,
+        volume_lookback=vol_lookback,
         volatility_percentile=vol_pct,
         volatility_state=vol_state,
+        volatility_window=vol_window,
+        volatility_lookback=vol_lb,
+        frequency=frequency,
     )
 
 
@@ -316,14 +378,17 @@ def describe_indicators(stats: IndicatorStats) -> str:
         parts.append(bb_text)
 
     if stats.ma_cross is not None:
+        ma_label = f"SMA {stats.ma_fast_period}/{stats.ma_slow_period}"
+        bar_unit = "bar" if stats.frequency in BAR_UNIT_FREQUENCIES else "day"
         if stats.ma_cross_days_ago is not None:
-            unit = "day" if stats.ma_cross_days_ago == 1 else "days"
-            parts.append(f"SMA 50/200: {stats.ma_cross} {stats.ma_cross_days_ago} {unit} ago")
+            unit = bar_unit if stats.ma_cross_days_ago == 1 else f"{bar_unit}s"
+            parts.append(f"{ma_label}: {stats.ma_cross} {stats.ma_cross_days_ago} {unit} ago")
         else:
-            parts.append(f"SMA 50/200: {stats.ma_cross}")
+            parts.append(f"{ma_label}: {stats.ma_cross}")
 
     if stats.volume_ratio is not None and stats.volume_state is not None:
-        parts.append(f"Volume: {stats.volume_ratio}x 20-day avg ({stats.volume_state})")
+        vol_unit = "bar" if stats.frequency in BAR_UNIT_FREQUENCIES else "day"
+        parts.append(f"Volume: {stats.volume_ratio}x {stats.volume_lookback}-{vol_unit} avg ({stats.volume_state})")
 
     if stats.volatility_percentile is not None and stats.volatility_state is not None:
         percentile = _format_ordinal(stats.volatility_percentile)

@@ -26,10 +26,10 @@ def _regime_short(df: pd.DataFrame, column: str) -> str:
         return "insufficient data"
 
 
-def _indicators_short(df: pd.DataFrame, column: str) -> dict[str, str]:
+def _indicators_short(df: pd.DataFrame, column: str, frequency: str = "daily") -> dict[str, str]:
     """Return compact indicator snippets."""
     try:
-        stats = analyze_indicators(df, column=column)
+        stats = analyze_indicators(df, column=column, frequency=frequency)
         parts: dict[str, str] = {}
         parts["rsi"] = f"{stats.rsi_value:.1f} ({stats.rsi_state})"
         parts["macd"] = stats.macd_state
@@ -81,6 +81,7 @@ def compare(
     *,
     column: str = "Close",
     ticker: str | None = None,
+    frequency: str | None = None,
     currency_symbol: str = "",
     precision: int = 2,
     include_regime: bool = True,
@@ -99,6 +100,8 @@ def compare(
     :param df_after: OHLCV DataFrame for the later period.
     :param column: Price column used across modules.
     :param ticker: Optional ticker override.
+    :param frequency: Explicit frequency label (e.g. ``"15min"``, ``"daily"``).
+        When ``None``, frequency is auto-detected from each DataFrame's index.
     :param currency_symbol: Symbol prepended to price values.
     :param precision: Decimal places for price values.
     :param include_regime: Include regime comparison.
@@ -121,8 +124,8 @@ def compare(
         if column not in df.columns:
             raise ValidationError(f"Column '{column}' does not exist in {label} DataFrame.")
 
-    sum_a = analyze_summary(df_before, column=column, ticker=ticker)
-    sum_b = analyze_summary(df_after, column=column, ticker=ticker)
+    sum_a = analyze_summary(df_before, column=column, ticker=ticker, frequency=frequency)
+    sum_b = analyze_summary(df_after, column=column, ticker=ticker, frequency=frequency)
     cs = currency_symbol
     p = precision
 
@@ -156,8 +159,8 @@ def compare(
         sections["regime"] = f"Regime: {ra} \u2192 {rb}"
 
     if include_indicators:
-        ia = _indicators_short(df_before, column)
-        ib = _indicators_short(df_after, column)
+        ia = _indicators_short(df_before, column, frequency=sum_a.frequency)
+        ib = _indicators_short(df_after, column, frequency=sum_b.frequency)
         sections["rsi"] = f"RSI(14): {ia['rsi']} \u2192 {ib['rsi']}"
         sections["macd"] = f"MACD: {ia['macd']} \u2192 {ib['macd']}"
         if "volume" in ia and "volume" in ib:

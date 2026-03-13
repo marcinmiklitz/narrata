@@ -21,7 +21,7 @@ from narrata.analysis.symbolic import astride_encode, describe_astride, describe
 from narrata.composition.compare import compare
 from narrata.composition.narrate import narrate
 from narrata.exceptions import ValidationError
-from narrata.validation.ohlcv import REQUIRED_OHLCV_COLUMNS
+from narrata.validation.ohlcv import REQUIRED_OHLCV_COLUMNS, infer_frequency_label
 
 _TIMESTAMP_CANDIDATES: tuple[str, ...] = ("timestamp", "datetime", "date", "time")
 _COLUMN_CANDIDATES: dict[str, tuple[str, ...]] = {
@@ -91,6 +91,7 @@ def narrate_from_records(
     deduplicate_timestamps: bool = True,
     sort_index: bool = True,
     column: str = "Close",
+    frequency: str | None = None,
     include_summary: bool = True,
     include_sparkline: bool = True,
     include_regime: bool = True,
@@ -142,6 +143,7 @@ def narrate_from_records(
     return narrate(
         frame,
         column=column,
+        frequency=frequency,
         include_summary=include_summary,
         include_sparkline=include_sparkline,
         include_regime=include_regime,
@@ -236,6 +238,7 @@ def indicators_from_records(
     sort_index: bool = True,
     column: str = "Close",
     rsi_period: int = 14,
+    frequency: str | None = None,
 ) -> dict[str, Any]:
     """Compute indicator stats and narration from OHLCV records.
 
@@ -246,6 +249,7 @@ def indicators_from_records(
     :param sort_index: Sort by timestamp ascending.
     :param column: Price column to analyze.
     :param rsi_period: RSI period.
+    :param frequency: Explicit frequency label. Auto-detected when ``None``.
     :return: Dict with ``indicators`` (structured) and ``text`` fields.
     """
     frame = ohlcv_records_to_frame(
@@ -255,7 +259,8 @@ def indicators_from_records(
         deduplicate_timestamps=deduplicate_timestamps,
         sort_index=sort_index,
     )
-    stats = analyze_indicators(frame, column=column, rsi_period=rsi_period)
+    freq = frequency or infer_frequency_label(frame.index)
+    stats = analyze_indicators(frame, column=column, rsi_period=rsi_period, frequency=freq)
     return {"indicators": _to_serializable(stats), "text": describe_indicators(stats)}
 
 
@@ -414,6 +419,7 @@ def compare_from_records(
     deduplicate_timestamps: bool = True,
     sort_index: bool = True,
     column: str = "Close",
+    frequency: str | None = None,
     currency_symbol: str = "",
     precision: int = 2,
     include_regime: bool = True,
@@ -444,6 +450,7 @@ def compare_from_records(
         frame_before,
         frame_after,
         column=column,
+        frequency=frequency,
         currency_symbol=currency_symbol,
         precision=precision,
         include_regime=include_regime,

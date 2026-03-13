@@ -67,6 +67,10 @@ class NarrateInput(OhlcvPayload):
     """Input for full narrate output."""
 
     column: str = Field(default="Close", description="Price column to analyze.")
+    frequency: str | None = Field(
+        default=None,
+        description="Explicit frequency (e.g. '15min', '5min', 'daily', 'irregular'). Auto-detected when omitted.",
+    )
     include_summary: bool = Field(default=True)
     include_sparkline: bool = Field(default=True)
     include_regime: bool = Field(default=True)
@@ -95,6 +99,10 @@ class IndicatorsInput(ColumnInput):
     """Input for indicator analysis."""
 
     rsi_period: int = Field(default=14, ge=2, le=200)
+    frequency: str | None = Field(
+        default=None,
+        description="Explicit frequency (e.g. '15min', '5min', 'daily', 'irregular'). Auto-detected when omitted.",
+    )
 
 
 class RegimeInput(ColumnInput):
@@ -146,6 +154,10 @@ class CompareInput(BaseModel):
     deduplicate_timestamps: bool = Field(default=True)
     sort_index: bool = Field(default=True)
     column: str = Field(default="Close", description="Price column to analyze.")
+    frequency: str | None = Field(
+        default=None,
+        description="Explicit frequency (e.g. '15min', '5min', 'daily', 'irregular'). Auto-detected when omitted.",
+    )
     currency_symbol: str = Field(default="", description="Symbol prepended to price values.")
     precision: int = Field(default=2, ge=0, le=10, description="Decimal places for price values.")
     include_regime: bool = Field(default=True)
@@ -193,6 +205,7 @@ def narrata_compare_ohlcv(params: CompareInput) -> dict[str, Any]:
                 deduplicate_timestamps=params.deduplicate_timestamps,
                 sort_index=params.sort_index,
                 column=params.column,
+                frequency=params.frequency,
                 currency_symbol=params.currency_symbol,
                 precision=params.precision,
                 include_regime=params.include_regime,
@@ -237,6 +250,7 @@ def narrata_narrate_ohlcv(params: NarrateInput) -> dict[str, Any]:
                 deduplicate_timestamps=params.deduplicate_timestamps,
                 sort_index=params.sort_index,
                 column=params.column,
+                frequency=params.frequency,
                 include_summary=params.include_summary,
                 include_sparkline=params.include_sparkline,
                 include_regime=params.include_regime,
@@ -342,6 +356,7 @@ def narrata_indicators_ohlcv(params: IndicatorsInput) -> dict[str, Any]:
             sort_index=params.sort_index,
             column=params.column,
             rsi_period=params.rsi_period,
+            frequency=params.frequency,
         )
     except NarrataError as exc:
         raise ValueError(str(exc)) from exc

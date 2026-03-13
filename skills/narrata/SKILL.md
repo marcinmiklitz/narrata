@@ -31,6 +31,10 @@ Use this skill for OHLCV-to-text workflows.
 
 Avoid internal/private helpers unless explicitly requested.
 
+## Intraday awareness
+
+narrata auto-detects sub-daily frequencies (`1min`, `5min`, `15min`, `30min`, `hourly`) and scales indicator defaults (SMA crossover, volume lookback, volatility lookback) to match daily-equivalent horizons. For patchy or unevenly-spaced data, pass the frequency explicitly: `narrate(df, frequency="15min")`, `--frequency 15min` (CLI), or the `frequency` field in MCP tools. Output labels adapt automatically (`"SMA 10/40"`, `"26-bar avg"`, `"bars ago"`).
+
 ## Data handling guidance
 
 - Patchy/misaligned numeric values are valid; do not reject them by default.

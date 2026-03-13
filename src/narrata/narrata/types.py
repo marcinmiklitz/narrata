@@ -38,14 +38,24 @@ class IndicatorStats:
     macd_histogram: float
     macd_state: str
     crossover_days_ago: int | None
+    macd_fast_period: int = 12
+    macd_slow_period: int = 26
+    macd_signal_period: int = 9
     bb_position: str | None = None
     bb_squeeze: bool | None = None
+    bb_period: int = 20
     ma_cross: str | None = None
     ma_cross_days_ago: int | None = None
+    ma_fast_period: int = 50
+    ma_slow_period: int = 200
     volume_ratio: float | None = None
     volume_state: str | None = None
+    volume_lookback: int = 20
     volatility_percentile: float | None = None
     volatility_state: str | None = None
+    volatility_window: int = 20
+    volatility_lookback: int = 252
+    frequency: str = "daily"
 
 
 @dataclass(frozen=True, slots=True)

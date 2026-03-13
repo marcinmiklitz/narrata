@@ -24,6 +24,7 @@ _FREQUENCY_LABELS = {
     "B": "business-daily",
     "C": "business-daily",
     "D": "daily",
+    "h": "hourly",
     "H": "hourly",
     "W": "weekly",
     "ME": "monthly",
@@ -32,7 +33,34 @@ _FREQUENCY_LABELS = {
     "QS": "quarterly",
     "YE": "yearly",
     "YS": "yearly",
+    "min": "minutely",
+    "T": "minutely",
 }
+
+# Frequencies considered intraday (sub-daily).
+INTRADAY_FREQUENCIES: frozenset[str] = frozenset({"1min", "5min", "15min", "30min", "hourly", "minutely"})
+
+# All recognized frequency labels (for validation of user-supplied values).
+VALID_FREQUENCIES: frozenset[str] = frozenset(
+    {
+        "1min",
+        "5min",
+        "15min",
+        "30min",
+        "minutely",
+        "hourly",
+        "daily",
+        "business-daily",
+        "weekly",
+        "monthly",
+        "quarterly",
+        "yearly",
+        "irregular",
+    }
+)
+
+# Frequencies that should use generic "bar" units instead of "day".
+BAR_UNIT_FREQUENCIES: frozenset[str] = INTRADAY_FREQUENCIES | {"irregular"}
 
 
 _VALIDATED_ATTR = "_narrata_validated"
@@ -116,6 +144,11 @@ def validate_ohlcv_frame(df: pd.DataFrame, required_columns: Sequence[str] = REQ
     df.attrs[_VALIDATED_ATTR] = True
 
 
+def is_intraday(frequency: str) -> bool:
+    """Return True if the frequency label represents sub-daily bars."""
+    return frequency in INTRADAY_FREQUENCIES
+
+
 def infer_frequency_label(index: pd.DatetimeIndex) -> str:
     """Infer a user-facing frequency label from a DatetimeIndex.
 
@@ -128,6 +161,17 @@ def infer_frequency_label(index: pd.DatetimeIndex) -> str:
     inferred = pd.infer_freq(index)
     if inferred:
         key = str(inferred).split("-")[0]
+        # Handle sub-hourly pandas codes like "5min", "15min", "min".
+        if key.endswith("min"):
+            prefix = key[: -len("min")]
+            if prefix == "" or prefix == "1":
+                return "1min"
+            return f"{prefix}min"
+        if key.endswith("T"):
+            prefix = key[:-1]
+            if prefix == "" or prefix == "1":
+                return "1min"
+            return f"{prefix}min"
         return _FREQUENCY_LABELS.get(key, key.lower())
 
     deltas = index.to_series().diff().dropna()
@@ -136,6 +180,14 @@ def infer_frequency_label(index: pd.DatetimeIndex) -> str:
 
     median_seconds = float(deltas.dt.total_seconds().median())
 
+    if median_seconds <= 120:
+        return "1min"
+    if median_seconds <= 600:
+        return "5min"
+    if median_seconds <= 1200:
+        return "15min"
+    if median_seconds <= 2400:
+        return "30min"
     if median_seconds <= 3600:
         return "hourly"
     if median_seconds <= 86_400:

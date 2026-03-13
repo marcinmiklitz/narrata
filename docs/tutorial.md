@@ -185,7 +185,53 @@ Support: 393.67 (15 touches), 378.77 (8 touches)  Resistance: 510.83 (34 touches
 - RSI/MACD values are often numerically close between in-house and `pandas_ta` for the same input series.
 <!-- BACKEND_COMPARISON_TUTORIAL:END -->
 
-## 8. Practical notes
+## 8. Intraday data
+
+narrata auto-detects sub-daily frequencies and scales indicator defaults. No special flags needed for clean data; for patchy or unevenly-spaced data, pass `frequency` explicitly:
+
+```python
+df_intraday = yf.download("AAPL", period="5d", interval="15m", multi_level_index=False)
+# Auto-detected:
+print(narrate(df_intraday, ticker="AAPL", currency_symbol="$"))
+
+# Explicit (for patchy data where auto-detection may fail):
+print(narrate(df_intraday, ticker="AAPL", currency_symbol="$", frequency="15min"))
+
+# Fully unstructured data with no fixed interval:
+print(narrate(df_irregular, ticker="XYZ", frequency="irregular"))
+```
+
+Representative output:
+
+```text
+AAPL (130 pts, 15min): ▂▅▄▄▃▃▂▁▆▃▃▃▇▆▇█▇▇█▆
+Date range: 2025-11-06 to 2025-11-12
+Range: [$268.73, $275.55]  Mean: $271.67  Std: $2.34
+Start: $268.73  End: $273.47  Change: +1.76%
+Regime: Ranging since 2025-11-06 (low volatility)
+RSI(14): 42.5 (neutral-bearish)  MACD: bearish crossover 6 days ago
+BB: below lower band (squeeze)
+SMA 10/40: golden cross 60 bars ago
+Volume: 2.89x 26-bar avg (unusually high)
+Volatility: 2nd percentile (extremely low)
+SAX(16): dddcbacbbcfghghh
+Patterns: Ascending triangle forming since 2025-11-10
+Candlestick: Doji on 2025-11-12
+Support: $272.02 (89 touches), $268.40 (52 touches)  Resistance: $274.96 (56 touches)
+```
+
+Key differences from daily output:
+- `SMA 10/40` instead of `SMA 50/200` — crossover periods scaled to cover ~10/40 sessions
+- `26-bar avg` instead of `20-day avg` — volume lookback covers ~1 trading day
+- `bars ago` instead of `days ago` — unit reflects actual bar count
+
+| Parameter | Daily | 15min | 5min |
+|---|---|---|---|
+| SMA crossover | 50 / 200 | 10 / 40 | 30 / 120 |
+| Volume lookback | 20 days | 26 bars | 78 bars |
+| Volatility lookback | 252 bars | 520 bars | 1560 bars |
+
+## 9. Practical notes
 
 ### Choosing output format
 
