@@ -52,6 +52,7 @@ print(narrate(df, ticker="AAPL"))
 ```
 
 Any data source works — yfinance, OpenBB, CSV, database — as long as you have a DataFrame with `Open`, `High`, `Low`, `Close`, `Volume` columns and a `DatetimeIndex`.
+For shorter histories, narrata keeps running and marks sections with `insufficient data` when a specific analysis needs a longer lookback.
 
 Example output:
 

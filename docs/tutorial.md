@@ -188,3 +188,7 @@ Support: $393.67 (15 touches), $378.77 (8 touches)  Resistance: $510.83 (34 touc
 ### When to enable digit-level tokenization
 
 Use `digit_level=True` only when you are explicitly optimizing number tokenization behavior in your LLM pipeline. For general usage, leave it off for readability.
+
+### Short-history behavior
+
+If a section needs more lookback than your dataset provides, `narrate(...)` does not fail the whole output. Instead, it keeps the rest of the narration and marks that section as `insufficient data`.

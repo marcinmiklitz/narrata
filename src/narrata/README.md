@@ -28,6 +28,8 @@ df = yf.download("AAPL", period="1y", multi_level_index=False)
 print(narrate(df, ticker="AAPL"))
 ```
 
+For short histories, narrata keeps running and marks sections with `insufficient data` when a component needs a longer lookback.
+
 Example output:
 
 ```text

@@ -128,3 +128,44 @@ def test_narrate_weekly_series_is_labeled_weekly() -> None:
         include_support_resistance=False,
     )
     assert "AAPL (120 pts, weekly):" in text
+
+
+def test_narrate_short_series_reports_insufficient_data_in_sensitive_sections() -> None:
+    index = pd.date_range("2025-01-01", periods=8, freq="D")
+    close = pd.Series(range(8), index=index, dtype=float) * 0.5 + 100.0
+    frame = pd.DataFrame(
+        {
+            "Open": close - 0.2,
+            "High": close + 0.4,
+            "Low": close - 0.5,
+            "Close": close,
+            "Volume": 1_000,
+        },
+        index=index,
+    )
+
+    text = narrate(frame, ticker="AAPL")
+    assert "Date range:" in text
+    assert "Regime: insufficient data" in text
+    assert "Indicators: insufficient data" in text
+    assert "SAX(16): insufficient data" in text
+    assert "Support: insufficient data  Resistance: insufficient data" in text
+
+
+def test_narrate_one_month_series_does_not_raise_and_marks_indicators_insufficient() -> None:
+    index = pd.date_range("2025-01-01", periods=22, freq="B")
+    close = pd.Series(range(22), index=index, dtype=float) * 0.4 + 150.0
+    frame = pd.DataFrame(
+        {
+            "Open": close - 0.1,
+            "High": close + 0.5,
+            "Low": close - 0.6,
+            "Close": close,
+            "Volume": 1_250,
+        },
+        index=index,
+    )
+
+    text = narrate(frame, ticker="AAPL")
+    assert "AAPL (22 pts, business-daily):" in text
+    assert "Indicators: insufficient data" in text

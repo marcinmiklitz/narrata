@@ -92,23 +92,44 @@ def narrate(
         sections["change"] = summary_lines[1]
 
     if include_regime:
-        sections["regime"] = describe_regime(analyze_regime(df, column=column))
+        try:
+            sections["regime"] = describe_regime(analyze_regime(df, column=column))
+        except ValidationError:
+            sections["regime"] = "Regime: insufficient data"
 
     if include_indicators:
-        sections["indicators"] = describe_indicators(analyze_indicators(df, column=column))
+        try:
+            sections["indicators"] = describe_indicators(analyze_indicators(df, column=column))
+        except ValidationError:
+            sections["indicators"] = "Indicators: insufficient data"
 
     if include_symbolic:
-        symbolic = sax_encode(df, column=column, word_size=symbolic_word_size, alphabet_size=symbolic_alphabet_size)
-        sections["symbolic"] = describe_sax(symbolic)
+        try:
+            symbolic = sax_encode(
+                df,
+                column=column,
+                word_size=symbolic_word_size,
+                alphabet_size=symbolic_alphabet_size,
+            )
+            sections["symbolic"] = describe_sax(symbolic)
+        except ValidationError:
+            sections["symbolic"] = f"SAX({symbolic_word_size}): insufficient data"
 
     if include_patterns:
-        pattern_stats = detect_patterns(df)
-        sections["patterns"] = describe_patterns(pattern_stats)
-        sections["candlestick"] = describe_candlestick(pattern_stats)
+        try:
+            pattern_stats = detect_patterns(df)
+            sections["patterns"] = describe_patterns(pattern_stats)
+            sections["candlestick"] = describe_candlestick(pattern_stats)
+        except ValidationError:
+            sections["patterns"] = "Patterns: insufficient data"
+            sections["candlestick"] = "Candlestick: insufficient data"
 
     if include_support_resistance:
-        levels = find_support_resistance(df, column=column)
-        sections["levels"] = describe_support_resistance(levels)
+        try:
+            levels = find_support_resistance(df, column=column)
+            sections["levels"] = describe_support_resistance(levels)
+        except ValidationError:
+            sections["levels"] = "Support: insufficient data  Resistance: insufficient data"
 
     rendered = format_sections(sections, output_format=output_format)
     if digit_level:
