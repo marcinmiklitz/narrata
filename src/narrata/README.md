@@ -103,8 +103,11 @@ narrata prices.parquet --ticker AAPL
 # Pipe from stdin (use --input-format for non-CSV)
 cat prices.tsv | narrata --input-format tsv --ticker AAPL
 
-# Disable sections, change format
-narrata prices.csv --no-patterns --format markdown_kv
+# Output formats: plain, markdown_kv, toon, json
+narrata prices.csv --format json
+
+# Precision and ASTRIDE encoding
+narrata prices.csv --precision 0 --symbolic-method astride
 ```
 
 Run `narrata --help` for all options.

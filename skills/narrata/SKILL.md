@@ -53,14 +53,17 @@ narrata data.parquet --ticker AAPL
 cat data.csv | narrata --ticker AAPL
 cat data.tsv | narrata --input-format tsv --ticker AAPL
 
-# Select output format
-narrata data.csv --format markdown_kv
+# Output formats: plain, markdown_kv, toon, json
+narrata data.csv --format json
+
+# Precision (default: 2; use 0 for BTC, 4 for forex)
+narrata data.csv --precision 0
+
+# ASTRIDE instead of SAX
+narrata data.csv --symbolic-method astride
 
 # Disable specific sections
 narrata data.csv --no-patterns --no-support-resistance
-
-# Digit-level tokenization
-narrata data.csv --digit-level
 ```
 
 The input must have a datetime index column and OHLC columns (Volume optional, column names case-insensitive). All `narrate()` parameters are exposed as flags — run `narrata --help` for the full list.

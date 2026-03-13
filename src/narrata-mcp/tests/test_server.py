@@ -170,6 +170,49 @@ def test_narrate_markdown_kv_format() -> None:
     anyio.run(_run)
 
 
+def test_narrate_json_format() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "output_format": "json"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                # The text itself should be valid JSON
+                inner = json.loads(data["text"])
+                assert "overview" in inner
+
+    anyio.run(_run)
+
+
+def test_narrate_precision() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "precision": 0}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                # With precision 0, no decimal points in Range line
+                assert "Range: [100, 124]" in data["text"]
+
+    anyio.run(_run)
+
+
+def test_narrate_astride_method() -> None:
+    async def _run() -> None:
+        payload = {"points": _build_points(120), "symbolic_method": "astride"}
+        async with _open_session() as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                result = await session.call_tool("narrata_narrate_ohlcv", {"params": payload})
+                data = _tool_text_payload(result)
+                assert "ASTRIDE(" in data["text"]
+                assert "SAX(" not in data["text"]
+
+    anyio.run(_run)
+
+
 # ---------------------------------------------------------------------------
 # narrata_summary_ohlcv
 # ---------------------------------------------------------------------------

@@ -168,13 +168,14 @@ print(f"Close sparkline: {spark}")
 
 ## Output formats
 
-You can keep the output plain, render as Markdown key-value, or serialize to TOON.
+Four output formats are available: `plain`, `markdown_kv`, `toon`, and `json`.
 
 ```python
 from narrata import narrate
 
-markdown_text = narrate(df, output_format="markdown_kv")
 plain_text = narrate(df, output_format="plain")
+markdown_text = narrate(df, output_format="markdown_kv")
+json_text = narrate(df, output_format="json")
 ```
 
 ## Digit Splitting for LLM Robustness
@@ -231,14 +232,17 @@ narrata prices.parquet --ticker AAPL
 curl -s https://example.com/data.csv | narrata --ticker MSFT
 cat prices.tsv | narrata --input-format tsv --ticker MSFT
 
-# Choose output format
-narrata prices.csv --ticker AAPL --format markdown_kv
+# Output as JSON for programmatic consumption
+narrata prices.csv --ticker AAPL --format json
+
+# Control price precision (default: 2; use 0 for BTC, 4 for forex)
+narrata prices.csv --ticker BTC --precision 0
+
+# Use ASTRIDE instead of SAX for symbolic encoding
+narrata prices.csv --ticker AAPL --symbolic-method astride
 
 # Disable specific sections
 narrata prices.csv --ticker AAPL --no-patterns --no-support-resistance
-
-# Apply digit-level tokenization
-narrata prices.csv --ticker AAPL --digit-level
 ```
 
 The input must have a datetime column as its index and OHLC columns (Volume is optional). Column names are case-insensitive. Run `narrata --help` for all options.
