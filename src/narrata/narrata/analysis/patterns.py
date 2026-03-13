@@ -95,11 +95,15 @@ def _detect_candlestick_with_pandas_ta(df: pd.DataFrame) -> tuple[str | None, da
     if bool(getattr(ta, "Imports", {}).get("talib", False)):
         names.append("engulfing")
 
+    clean = df[["Open", "High", "Low", "Close"]].apply(pd.to_numeric, errors="coerce").dropna()
+    if clean.shape[0] < 2:
+        return None, None
+
     patterns = ta.cdl_pattern(  # type: ignore[union-attr]
-        pd.to_numeric(df["Open"], errors="coerce"),
-        pd.to_numeric(df["High"], errors="coerce"),
-        pd.to_numeric(df["Low"], errors="coerce"),
-        pd.to_numeric(df["Close"], errors="coerce"),
+        clean["Open"],
+        clean["High"],
+        clean["Low"],
+        clean["Close"],
         name=names,
     )
     if patterns is None or patterns.empty:
@@ -139,11 +143,14 @@ def _detect_candlestick_inhouse(df: pd.DataFrame) -> tuple[str | None, date | No
     if df.shape[0] < 2:
         return None, None
 
-    window = df.tail(60)
-    open_series = pd.to_numeric(window["Open"], errors="coerce")
-    high_series = pd.to_numeric(window["High"], errors="coerce")
-    low_series = pd.to_numeric(window["Low"], errors="coerce")
-    close_series = pd.to_numeric(window["Close"], errors="coerce")
+    window = df.tail(60)[["Open", "High", "Low", "Close"]].apply(pd.to_numeric, errors="coerce").dropna()
+    if window.shape[0] < 2:
+        return None, None
+
+    open_series = window["Open"]
+    high_series = window["High"]
+    low_series = window["Low"]
+    close_series = window["Close"]
 
     doji_threshold = 0.10
     for idx in range(window.shape[0] - 1, 0, -1):
