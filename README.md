@@ -214,17 +214,22 @@ Optional extras:
 
 ## CLI
 
-narrata includes a command-line tool that reads OHLCV data from CSV files or stdin:
+narrata includes a command-line tool that reads OHLCV data from CSV, TSV, or Parquet files (or stdin):
 
 ```bash
 # Install with all extras
 pip install "narrata[all]"
 
-# Narrate a local CSV
+# Narrate a local CSV (format auto-detected from extension)
 narrata prices.csv --ticker AAPL
 
-# Pipe from another tool
+# TSV and Parquet work the same way
+narrata prices.tsv --ticker AAPL
+narrata prices.parquet --ticker AAPL
+
+# Pipe from stdin (defaults to CSV; use --input-format for others)
 curl -s https://example.com/data.csv | narrata --ticker MSFT
+cat prices.tsv | narrata --input-format tsv --ticker MSFT
 
 # Choose output format
 narrata prices.csv --ticker AAPL --format markdown_kv
@@ -236,7 +241,7 @@ narrata prices.csv --ticker AAPL --no-patterns --no-support-resistance
 narrata prices.csv --ticker AAPL --digit-level
 ```
 
-The CSV must have a datetime column as its index and OHLC columns (Volume is optional). Column names are case-insensitive. Run `narrata --help` for all options.
+The input must have a datetime column as its index and OHLC columns (Volume is optional). Column names are case-insensitive. Run `narrata --help` for all options.
 
 ## Agent Integrations
 

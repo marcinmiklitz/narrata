@@ -19,7 +19,13 @@ def _build_parser() -> argparse.ArgumentParser:
         "file",
         nargs="?",
         default="-",
-        help="CSV file path, or '-' / omit to read from stdin.",
+        help="Path to CSV, TSV, or Parquet file. Use '-' or omit for stdin.",
+    )
+    p.add_argument(
+        "--input-format",
+        choices=["csv", "tsv", "parquet"],
+        default=None,
+        help="Input format (auto-detected from extension by default; required for stdin of non-CSV data).",
     )
     p.add_argument("--ticker", default=None, help="Ticker symbol for the header line.")
     p.add_argument("--column", default="Close", help="Price column to analyze (default: Close).")
@@ -46,10 +52,33 @@ def _build_parser() -> argparse.ArgumentParser:
     return p
 
 
-def _read_ohlcv(path: str) -> pd.DataFrame:
-    """Read OHLCV CSV from a file path or stdin."""
+def _detect_format(path: str, explicit: str | None) -> str:
+    """Return input format from explicit flag or file extension."""
+    if explicit:
+        return explicit
+    if path == "-":
+        return "csv"
+    lower = path.lower()
+    if lower.endswith(".tsv"):
+        return "tsv"
+    if lower.endswith((".parquet", ".pq")):
+        return "parquet"
+    return "csv"
+
+
+def _read_ohlcv(path: str, fmt: str) -> pd.DataFrame:
+    """Read OHLCV data from a file path or stdin."""
+    if fmt == "parquet":
+        if path == "-":
+            raise SystemExit("narrata: parquet format cannot be read from stdin.")
+        df = pd.read_parquet(path)
+        if not isinstance(df.index, pd.DatetimeIndex):
+            df.index = pd.to_datetime(df.index)
+        return df
+
+    sep = "\t" if fmt == "tsv" else ","
     source = sys.stdin if path == "-" else path
-    df = pd.read_csv(source, parse_dates=True, index_col=0)
+    df = pd.read_csv(source, sep=sep, parse_dates=True, index_col=0)
     if not isinstance(df.index, pd.DatetimeIndex):
         df.index = pd.to_datetime(df.index)
     return df
@@ -57,8 +86,9 @@ def _read_ohlcv(path: str) -> pd.DataFrame:
 
 def main(argv: list[str] | None = None) -> None:
     args = _build_parser().parse_args(argv)
+    fmt = _detect_format(args.file, args.input_format)
 
-    df = _read_ohlcv(args.file)
+    df = _read_ohlcv(args.file, fmt)
 
     text = narrate(
         df,

@@ -95,11 +95,13 @@ Support: $393.67 (15 touches), $378.77 (8 touches)  Resistance: $510.83 (34 touc
 ## CLI
 
 ```bash
-# Narrate a CSV file
+# CSV, TSV, or Parquet (auto-detected from extension)
 narrata prices.csv --ticker AAPL
+narrata prices.tsv --ticker AAPL
+narrata prices.parquet --ticker AAPL
 
-# Pipe from stdin
-cat prices.csv | narrata --ticker AAPL
+# Pipe from stdin (use --input-format for non-CSV)
+cat prices.tsv | narrata --input-format tsv --ticker AAPL
 
 # Disable sections, change format
 narrata prices.csv --no-patterns --format markdown_kv

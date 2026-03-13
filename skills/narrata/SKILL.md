@@ -41,14 +41,17 @@ Avoid internal/private helpers unless explicitly requested.
 
 ## CLI guidance
 
-narrata ships a CLI that reads OHLCV CSV files and prints narration to stdout:
+narrata ships a CLI that reads OHLCV data from CSV, TSV, or Parquet and prints narration to stdout:
 
 ```bash
-# From a file
+# Format auto-detected from extension
 narrata data.csv --ticker AAPL
+narrata data.tsv --ticker AAPL
+narrata data.parquet --ticker AAPL
 
-# From stdin (pipe-friendly)
+# Stdin (defaults to CSV; use --input-format for others)
 cat data.csv | narrata --ticker AAPL
+cat data.tsv | narrata --input-format tsv --ticker AAPL
 
 # Select output format
 narrata data.csv --format markdown_kv
@@ -60,7 +63,7 @@ narrata data.csv --no-patterns --no-support-resistance
 narrata data.csv --digit-level
 ```
 
-The CSV must have a DatetimeIndex as the first column and `Open`, `High`, `Low`, `Close`, `Volume` columns. All `narrate()` parameters are exposed as flags — run `narrata --help` for the full list.
+The input must have a datetime index column and OHLC columns (Volume optional, column names case-insensitive). All `narrate()` parameters are exposed as flags — run `narrata --help` for the full list.
 
 Install: `uv tool install narrata[all]` or `pip install narrata[all]`.
 
