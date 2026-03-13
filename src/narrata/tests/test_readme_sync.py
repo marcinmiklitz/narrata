@@ -44,10 +44,7 @@ def test_body_matches() -> None:
     """From ## Installation onward, both READMEs must be identical."""
     root_body = _from_installation(ROOT_README.read_text())
     pkg_body = _from_installation(PKG_README.read_text())
-    assert root_body == pkg_body, (
-        "Root and package READMEs have diverged after ## Installation. "
-        "Keep them in sync."
-    )
+    assert root_body == pkg_body, "Root and package READMEs have diverged after ## Installation. Keep them in sync."
 
 
 def _extract_sections(text: str) -> set[str]:
